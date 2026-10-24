@@ -2,7 +2,7 @@
   "name": "thekenfuchs",
   "version": "1.0.0",
   "private": true,
-  "description": "Antippen statt Kopfrechnen – Thekenrechner für Vereinsfeste. Offline-Web-App für Tablet und Smartphone (iPad, Android, Windows): Produkte mit Preisen auf Tasten, Pfandautomatik, Rückgeld auf einen Blick, Preisliste per QR auf alle Geräte verteilbar. Rechenhilfe, keine Kasse – speichert keine Verkäufe.",
+  "description": "Antippen statt Kopfrechnen – Thekenrechner für Vereinsfeste. Offline-Web-App für Tablet und Smartphone (iPad, Android, Windows): Produkte mit Preisen auf Tasten, Pfandautomatik, Rückgeld auf einen Blick, Preisliste per QR-Code auf alle Geräte verteilbar. Rechenhilfe, keine Kasse – speichert keine Verkäufe.",
   "author": "Jochen G. Fuchs (https://efuchs.net)",
   "license": "MIT",
   "scripts": {

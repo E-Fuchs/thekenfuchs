@@ -1,7 +1,7 @@
 # Thekenfuchs
 
 **Antippen statt Kopfrechnen – Thekenrechner für Vereinsfeste.**
-Produkte mit Preisen auf Tasten · Pfandautomatik · Rückgeld auf einen Blick · Preisliste per QR auf alle Geräte verteilbar.
+Produkte mit Preisen auf Tasten · Pfandautomatik · Rückgeld auf einen Blick · Preisliste per QR-Code auf alle Geräte verteilbar · Online-Installation, Offline-Betrieb.
 
 *Rechenhilfe, keine Kasse: Der Thekenfuchs speichert keine Verkäufe.*
 

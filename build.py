@@ -22,11 +22,11 @@ VERSION = datetime.datetime.now().strftime("%Y.%m.%d-%H%M") + "-dev"
 DEFAULT_URL = "https://e-fuchs.github.io/thekenfuchs/app/"
 NAME = "Thekenfuchs"
 TAGLINE = "Antippen statt Kopfrechnen – Thekenrechner für Vereinsfeste"
-FEATURES = "Produkte mit Preisen auf Tasten · Pfandautomatik · Rückgeld auf einen Blick · Preisliste per QR auf alle Geräte verteilbar"
+FEATURES = "Produkte mit Preisen auf Tasten · Pfandautomatik · Rückgeld auf einen Blick · Preisliste per QR-Code auf alle Geräte verteilbar · Online-Installation, Offline-Betrieb"
 DISCLAIMER = "Rechenhilfe, keine Kasse: Der Thekenfuchs speichert keine Verkäufe."
 DESCRIPTION = ("Antippen statt Kopfrechnen – Thekenrechner für Vereinsfeste. Offline-Web-App für Tablet und "
                "Smartphone (iPad, Android, Windows): Produkte mit Preisen auf Tasten, Pfandautomatik, Rückgeld "
-               "auf einen Blick, Preisliste per QR auf alle Geräte verteilbar. Rechenhilfe, keine Kasse – "
+               "auf einen Blick, Preisliste per QR-Code auf alle Geräte verteilbar. Rechenhilfe, keine Kasse – "
                "speichert keine Verkäufe.")
 
 FONTS = [
@@ -315,7 +315,7 @@ README = """# Thekenfuchs (Version @VERSION@)
 
 **Antippen statt Kopfrechnen – Thekenrechner für Vereinsfeste.**
 Offline-Web-App für Tablet und Smartphone (iPad, Android, Windows): Produkte mit Preisen auf Tasten,
-Pfandautomatik, Rückgeld auf einen Blick, Preisliste per QR auf alle Geräte verteilbar.
+Pfandautomatik, Rückgeld auf einen Blick, Preisliste per QR-Code auf alle Geräte verteilbar.
 
 *Rechenhilfe, keine Kasse: Der Thekenfuchs speichert keine Verkäufe.*
 
@@ -377,7 +377,7 @@ Normal ersetzt jeder Tipp den Betrag; „+“ bzw. „−“ gilt für den näch
 „−“ zieht den nächsten Betrag ab. Gilt nur für dieses Gerät.
 
 **Mehrere Feste:** Einstellungen → Feste: Namen eingeben, Vorlage wählen (Kopie des
-aktiven, leer oder Beispiel), „Fest anlegen“. Bearbeitet und per QR weitergegeben wird
+aktiven, leer oder Beispiel), „Fest anlegen“. Bearbeitet und per QR-Code weitergegeben wird
 immer das aktive Fest. Beim Import mit gleichem Namen bietet die App „aktualisieren“ an.
 
 **Pfand:**
