@@ -1,0 +1,788 @@
+<div class="demo-bar" id="demoBar" hidden><span><b>Demo</b> · Nichts wird gespeichert. Neu laden setzt alles zurück.</span><span class="spacer"></span><button type="button" class="btn btn-quiet" id="demoReset">Zurücksetzen</button><a class="btn btn-quiet" href="../install/">Installieren</a></div>
+<div class="app" id="app">
+  <header class="top">
+    <h1 id="evName">Thekenfuchs</h1>
+    <span class="chip hide-narrow" title="Kennung der Preisliste. Auf allen Geräten gleich = gleiche Preise.">Preisliste <b id="fp">----</b></span>
+    <span class="spacer"></span>
+    <button class="btn btn-quiet" id="btnSettings" type="button" aria-label="Einstellungen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      <span class="hide-narrow">Einstellungen</span>
+    </button>
+  </header>
+  <main class="board" id="board" aria-label="Artikel"></main>
+  <aside class="bon" aria-label="Aktueller Gast">
+    <div class="bon-lines" id="lines"></div>
+    <div class="total"><span class="lbl" id="totalLbl">Summe</span><span class="amt" id="total">0,00 €</span></div>
+    <div class="given" id="given"></div>
+    <div class="change" id="change" hidden><span class="lbl"><span id="changeLbl">Rückgeld</span><small id="givenAmt"></small></span><span class="amt" id="changeAmt"></span></div>
+    <button class="btn btn-primary next" id="btnNext" type="button">Neuer Gast</button>
+  </aside>
+</div>
+
+<section class="sheet" id="pinSheet" hidden aria-label="PIN eingeben">
+  <div class="sheet-in">
+    <div class="sheet-head"><h2>PIN eingeben</h2><button class="btn" type="button" data-act="pin-cancel">Abbrechen</button></div>
+    <div class="pinpad">
+      <p class="note" id="pinMsg">Die Einstellungen sind gesperrt.</p>
+      <div class="pindots" id="pinDots"><i></i><i></i><i></i><i></i></div>
+      <div class="pinkeys" id="pinKeys"></div>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="setSheet" hidden aria-label="Einstellungen">
+  <div class="sheet-in" id="setBody"></div>
+</section>
+<div class="savebar" id="saveBar" hidden>
+  <span class="msg" id="saveMsg"></span>
+  <button class="btn" type="button" data-act="discard">Schließen ohne Speichern</button>
+  <button class="btn btn-primary" type="button" data-act="save">Preisliste speichern</button>
+</div>
+
+<section class="sheet scan" id="scanSheet" hidden aria-label="QR-Code scannen">
+  <div class="sheet-in">
+    <div class="sheet-head"><h2>QR-Code scannen</h2><button class="btn" type="button" data-act="scan-stop">Abbrechen</button></div>
+    <video id="scanVideo" playsinline muted></video>
+    <p class="note" id="scanMsg">Halte die Kamera auf den QR-Code am anderen Gerät.</p>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<!--@LIBS@-->
+<script>
+(() => {
+'use strict';
+/*@BUILD@*/
+const BUILD = window.__BUILD__ || { pwa:false, version:'dev' };
+
+/* ---------- Konstanten ---------- */
+const NCOL = 7;                      // Farbtokens --c0 … --c6
+const COLOR_NAMES = ['Orange','Blau','Grün','Gelb','Rot','Violett','Grau'];
+const KEY_CFG = 'thekenfuchs.preisliste.v1';
+const KEY_PIN = 'thekenfuchs.pin.v1';
+const KEY_FESTE = 'thekenfuchs.feste.v1';
+const LIMITS = { cats:8, items:80, name:40, feste:20 };
+const SAMPLE = {
+  name:'Sommerfest (Beispiel)',
+  cats:[
+    { name:'Speisen',  color:0, items:[['Bratwurst im Brötchen',350],['Rote Wurst',350],['Steak im Brötchen',550],['Pommes',300],['Currywurst + Pommes',600],['Kuchenstück',250]] },
+    { name:'Getränke', color:1, items:[['Bier 0,5 l',400,1],['Radler 0,5 l',400,1],['Apfelschorle 0,5 l',300,1],['Wasser 0,5 l',200,1],['Kaffee',200]] },
+    { name:'Pfand',    color:6, items:[['Pfand Glas',200],['Pfand zurück',-200]], pf:{ auto:true, std:0 } }
+  ]
+};
+
+/* ---------- Helfer ---------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const eur = new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'});
+const money = (c) => eur.format(c/100);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+// Demo: Speicher nur im Arbeitsspeicher – die Demo darf nie echte Preislisten auf dem Gerät berühren.
+const memStore = new Map();
+const store = BUILD.demo ? {
+  get(k){ return memStore.has(k) ? memStore.get(k) : null; },
+  set(k,v){ memStore.set(k,String(v)); return true; },
+  del(k){ memStore.delete(k); }
+} : {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+if(!BUILD.demo){   // Übernahme aus der Zeit als „Festrechner“ (gleicher Speicherort, z. B. lokal unter Windows)
+  ['preisliste','pin','feste','geraet'].forEach(n=>{
+    const o=store.get('festrechner.'+n+'.v1');
+    if(o!==null && store.get('thekenfuchs.'+n+'.v1')===null){ store.set('thekenfuchs.'+n+'.v1',o); store.del('festrechner.'+n+'.v1'); }
+  });
+}
+function fnv(str){ let h=0x811c9dc5; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,0x01000193); } return (h>>>0); }
+function parsePrice(s){
+  const t = String(s).trim().replace(/\s|€/g,'').replace(',', '.');
+  if(!/^-?\d{1,4}(\.\d{0,2})?$/.test(t)) return null;
+  return Math.round(parseFloat(t)*100);
+}
+const priceInput = (c) => (c/100).toFixed(2).replace('.', ',');
+let toastT;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,2600); }
+const ICON = {
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>',
+  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
+  del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>'
+};
+
+/* ---------- Preisliste: Validierung, Kodierung ---------- */
+// Pfand-Modell: höchstens eine Kategorie ist Pfandkategorie (cat.pf = {auto, std}).
+// Ihre Artikel mit positivem Preis sind Pfandwerte (z. B. Pfand Glas, Pfand Krug); std = Standard-Pfandwert.
+// Andere Artikel verweisen mit Feld 3 = Index+1 auf einen Pfandwert.
+// Kompaktform (für QR): {v:1,n:"Name",c:[["Getränke",1,[["Bier",400,1],…]],["Pfand",6,[["Pfand Glas",200]],[1,0]]]}
+const priceOf = (v) => typeof v==='number' ? v : parsePrice(v);
+const pfCatIdx = (c) => c.cats.findIndex(k=>k.pf);
+function pfOptions(c){
+  const k=pfCatIdx(c); if(k<0) return [];
+  return c.cats[k].items.map((it,i)=>({i,name:it[0],price:priceOf(it[1])})).filter(o=>o.price!==null && o.price>0);
+}
+function toCompact(cfg){
+  return { v:1, n:cfg.name, c:cfg.cats.map(k=>{
+    const a=[k.name,k.color,k.items.map(i=>i[2]?[i[0],i[1],i[2]]:[i[0],i[1]])];
+    if(k.pf) a.push([k.pf.auto?1:0,k.pf.std]);
+    return a; }) };
+}
+function migrateLegacyPfand(cats, lg){
+  // Zwischenversion: Pfand als Fest-Einstellung {auto, price} + Artikel-Häkchen (Feld 3 = 1).
+  const flagged = cats.some(k=>k.items.some(i=>i[2]));
+  const strip = () => cats.forEach(k=>k.items.forEach(i=>{ i.length=2; }));
+  if(!lg.auto && !flagged){ strip(); return; }
+  const price = Number.isInteger(lg.price) && lg.price>0 ? lg.price : 200;
+  let pk = cats.findIndex(k=>/pfand/i.test(k.name));
+  if(pk<0){ if(cats.length>=LIMITS.cats){ strip(); return; } cats.push({name:'Pfand',color:6,items:[]}); pk=cats.length-1; }
+  const pc=cats[pk]; pc.items.forEach(i=>{ i.length=2; });
+  let std = pc.items.findIndex(i=>i[1]===price);
+  if(std<0){ pc.items.unshift(['Pfand',price]); std=0; }
+  pc.pf = { auto:!!lg.auto, std };
+  cats.forEach((k,ci)=>{ if(ci!==pk) k.items.forEach(i=>{ if(i[2]) i[2]=std+1; else i.length=2; }); });
+}
+function normalize(raw){
+  let o = raw, legacy = null;
+  if(o && o.v===1 && Array.isArray(o.c)){
+    if(Array.isArray(o.d)) legacy = { auto:o.d[0]===1, price:o.d[1] };
+    o = { name:o.n, cats:o.c.map(k=>({ name:k[0], color:k[1], items:k[2], pf:Array.isArray(k[3])?{auto:k[3][0]===1,std:k[3][1]}:null })) };
+  } else if(o && o.pfand && typeof o.pfand==='object') legacy = o.pfand;
+  if(!o || typeof o!=='object' || !Array.isArray(o.cats)) throw new Error('Das ist keine Thekenfuchs-Preisliste.');
+  const name = String(o.name||'Fest').trim().slice(0,LIMITS.name) || 'Fest';
+  if(o.cats.length>LIMITS.cats) throw new Error('Höchstens '+LIMITS.cats+' Kategorien.');
+  let count=0;
+  const cats = o.cats.map(k=>{
+    const items = (Array.isArray(k.items)?k.items:[]).map(i=>{
+      const n = String(Array.isArray(i)?i[0]:i.name||'').trim().slice(0,LIMITS.name);
+      const p = Number(Array.isArray(i)?i[1]:i.price);
+      if(!n) throw new Error('Ein Artikel hat keinen Namen.');
+      if(!Number.isInteger(p) || Math.abs(p)>99999) throw new Error('Ungültiger Preis bei „'+n+'“.');
+      const r = Math.trunc(Number(Array.isArray(i)?i[2]:i.pfand)||0);
+      count++; return r>0 ? [n,p,r] : [n,p];
+    });
+    const color = Number.isInteger(k.color) && k.color>=0 && k.color<NCOL ? k.color : 6;
+    const out = { name:String(k.name||'Kategorie').trim().slice(0,LIMITS.name)||'Kategorie', color, items };
+    if(k.pf && typeof k.pf==='object') out.pf = { auto:!!k.pf.auto, std:Number.isInteger(k.pf.std)?k.pf.std:0 };
+    return out;
+  });
+  if(count>LIMITS.items) throw new Error('Höchstens '+LIMITS.items+' Artikel.');
+  if(legacy) migrateLegacyPfand(cats, legacy);
+  let pk=-1; cats.forEach((k,i)=>{ if(k.pf){ if(pk<0) pk=i; else delete k.pf; } });
+  const pos = pk<0 ? [] : cats[pk].items.map((it,i)=>it[1]>0?i:-1).filter(i=>i>=0);
+  if(pk>=0 && !pos.includes(cats[pk].pf.std)) cats[pk].pf.std = pos.length ? pos[0] : 0;
+  cats.forEach((k,ci)=>k.items.forEach(it=>{ if(it.length>2 && (ci===pk || !pos.includes(it[2]-1))) it.length=2; }));
+  return { name, cats };
+}
+const fingerprint = (cfg) => fnv(JSON.stringify(toCompact(cfg))).toString(16).toUpperCase().padStart(8,'0').slice(0,4);
+function b64u(bytes){ let s=''; for(let i=0;i<bytes.length;i++) s+=String.fromCharCode(bytes[i]); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function unb64u(str){ const s=atob(str.replace(/-/g,'+').replace(/_/g,'/')); const b=new Uint8Array(s.length); for(let i=0;i<s.length;i++) b[i]=s.charCodeAt(i); return b; }
+async function pipe(bytes, stream){ return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer()); }
+async function encodeCfg(cfg){
+  const bytes = new TextEncoder().encode(JSON.stringify(toCompact(cfg)));
+  if(typeof CompressionStream==='function'){
+    try{ return 'FR1.'+b64u(await pipe(bytes,new CompressionStream('deflate-raw'))); }catch(e){}
+  }
+  return 'FR0.'+b64u(bytes);
+}
+async function decodeText(text){
+  const t = String(text||'').trim();
+  const m = t.match(/FR([01])\.([A-Za-z0-9_-]+)/);
+  if(m){
+    let bytes = unb64u(m[2]);
+    if(m[1]==='1'){
+      if(typeof DecompressionStream!=='function') throw new Error('Dieses Gerät kann den Code nicht entpacken. Bitte Betriebssystem oder Browser aktualisieren.');
+      bytes = await pipe(bytes,new DecompressionStream('deflate-raw'));
+    }
+    return normalize(JSON.parse(new TextDecoder().decode(bytes)));
+  }
+  if(t.startsWith('{')) return normalize(JSON.parse(t));
+  throw new Error('Kein gültiger Preislisten-Code gefunden.');
+}
+function shareLink(code){ if(!BUILD.pwa) return code; const base = BUILD.demo ? new URL('../app/', location.href).href : location.origin + location.pathname; return base + '#cfg=' + code; }
+
+/* ---------- Zustand ---------- */
+// Gespeichert wird NUR die Preisliste. Der laufende Gast lebt ausschließlich im Arbeitsspeicher.
+// Mehrere Feste = mehrere Preislisten. Ein Fest ist aktiv.
+let feste = loadFeste();    // { active:id, list:[{id,cfg}] }
+let cfg = activeFest().cfg;
+let order = new Map();      // "k:i" -> Menge
+let given = null;           // gegebener Betrag in Cent
+let gmode = null;           // 'add' | 'sub' | null – gilt für den nächsten Geld-Tipp
+const KEY_PREFS = 'thekenfuchs.geraet.v1';
+const prefs = (()=>{ try{ const o=JSON.parse(store.get(KEY_PREFS)||'{}'); return { autoAdd:!!o.autoAdd }; }catch(e){ return { autoAdd:false }; } })();
+const savePrefs = () => store.set(KEY_PREFS, JSON.stringify(prefs));
+function newId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function loadFeste(){
+  const raw = store.get(KEY_FESTE);
+  if(raw){
+    try{
+      const o=JSON.parse(raw); const list=[];
+      (Array.isArray(o.list)?o.list:[]).slice(0,LIMITS.feste).forEach(f=>{ try{ list.push({id:String(f.id),cfg:normalize(f.cfg)}); }catch(e){} });
+      if(list.length) return { active: list.some(f=>f.id===o.active) ? o.active : list[0].id, list };
+    }catch(e){}
+  }
+  let first=null; const old=store.get(KEY_CFG);                 // Übernahme aus Version mit nur einer Preisliste
+  if(old){ try{ first=normalize(JSON.parse(old)); }catch(e){} }
+  const f={ id:newId(), cfg:first||normalize(clone(SAMPLE)) };
+  return { active:f.id, list:[f] };
+}
+function persist(){ const ok=store.set(KEY_FESTE, JSON.stringify(feste)); if(ok) store.del(KEY_CFG); return ok; }
+function activeFest(){ return feste.list.find(f=>f.id===feste.active) || feste.list[0]; }
+function afterChange(){ cfg=activeFest().cfg; const ok=persist(); resetGuest(); renderAll(); return ok; }
+function saveCfg(c){ activeFest().cfg=c; return afterChange(); }
+function selectFest(id){ if(feste.list.some(f=>f.id===id)) feste.active=id; return afterChange(); }
+function addFest(c){
+  if(feste.list.length>=LIMITS.feste) throw new Error('Höchstens '+LIMITS.feste+' Feste. Lösche zuerst ein altes.');
+  const f={ id:newId(), cfg:c }; feste.list.push(f); feste.active=f.id; return afterChange();
+}
+function deleteFest(id){
+  if(feste.list.length<=1) return false;
+  feste.list=feste.list.filter(f=>f.id!==id);
+  if(!feste.list.some(f=>f.id===feste.active)) feste.active=feste.list[0].id;
+  return afterChange();
+}
+const itemCount = (c) => c.cats.reduce((a,k)=>a+k.items.length,0);
+function itemAt(key){
+  const [k,i]=key.split(':').map(Number); const cat=cfg.cats[k];
+  return cat && cat.items[i] ? {cat,k,i,name:cat.items[i][0],price:cat.items[i][1],ref:cat.items[i][2]||0} : null;
+}
+function autoPfKey(k,ref){
+  // Schlüssel des Pfandwerts, der bei diesem Artikel automatisch mitläuft – oder null.
+  const pk=pfCatIdx(cfg); if(pk<0 || k===pk || !ref || !cfg.cats[pk].pf.auto) return null;
+  const p=cfg.cats[pk].items[ref-1]; return p && p[1]>0 ? pk+':'+(ref-1) : null;
+}
+function total(){ let s=0; order.forEach((q,key)=>{ const it=itemAt(key); if(it) s+=q*it.price; }); return s; }
+function resetGuest(){ order=new Map(); given=null; gmode=null; }
+
+/* ---------- Rendern: Rechner ---------- */
+function renderAll(){ renderHead(); renderBoard(); renderBon(); }
+function renderHead(){ $('evName').textContent=cfg.name; $('fp').textContent=fingerprint(cfg); document.title='Thekenfuchs'; }
+function renderBoard(){
+  const b=$('board');
+  if(!cfg.cats.some(c=>c.items.length)){
+    b.innerHTML='<p class="empty-board">Noch keine Artikel. Lege unter Einstellungen Speisen und Getränke mit Preisen an.</p>'; return;
+  }
+  b.innerHTML = cfg.cats.map((c,k)=> !c.items.length ? '' : `
+    <section class="cat" style="--cat:var(--c${c.color})">
+      <h2>${esc(c.name)}</h2>
+      <div class="keys">${c.items.map((it,i)=>{
+        const key=k+':'+i, q=order.get(key)||0;
+        const pkey=autoPfKey(k,it[2]||0), pfn = pkey ? itemAt(pkey).name : '';
+        return `<button type="button" class="key${q?' has':''}" data-key="${key}" aria-label="${esc(it[0])}, ${esc(money(it[1]))}${pkey?' plus '+esc(pfn):''}${q?', '+q+' gewählt':''}">
+          <span class="kn">${esc(it[0])}</span><span class="kp">${esc(money(it[1]))}${pkey?`<small>+ ${esc(pfn)}</small>`:''}</span>${q?`<span class="stamp">${q}</span>`:''}</button>`;
+      }).join('')}</div>
+    </section>`).join('');
+}
+const COINS = [50,100,200,500,1000,2000,5000,10000];
+const coinLabel = (c) => c<100 ? c+' ct' : (c/100)+' €';
+function renderGiven(s){
+  const off = s<=0 ? 'disabled' : '';
+  $('given').classList.toggle('auto', prefs.autoAdd);
+  $('given').innerHTML =
+    COINS.map(c=>`<button type="button" class="btn" data-coin="${c}" ${off}>${coinLabel(c)}</button>`).join('') +
+    `<button type="button" class="btn op sub" data-gop="sub" aria-pressed="${gmode==='sub'}" aria-label="Nächsten Betrag abziehen" ${off}>−</button>` +
+    (prefs.autoAdd ? '' : `<button type="button" class="btn op" data-gop="add" aria-pressed="${gmode==='add'}" aria-label="Nächsten Betrag addieren" ${off}>+</button>`) +
+    `<button type="button" class="btn op clear" data-gop="clear" aria-label="Gegebenes Geld löschen" ${given===null?'disabled':off}>C</button>`;
+}
+function tapCoin(c){
+  const cur = given||0;
+  const mode = gmode || (prefs.autoAdd ? 'add' : 'set');
+  if(mode==='set') given=c;
+  else if(mode==='add') given=cur+c;
+  else { const v=cur-c; given = v>0 ? v : null; }
+  gmode=null;
+}
+function renderBon(){
+  const lines=[]; order.forEach((q,key)=>{ const it=itemAt(key); if(it&&q) lines.push({key,q,...it}); });
+  lines.sort((a,b)=>(!!a.cat.pf)-(!!b.cat.pf));            // Pfand ans Ende
+  $('lines').innerHTML = lines.length ? lines.map(l=>`
+    <div class="line" style="--cat:var(--c${l.cat.color})">
+      <span class="ln">${esc(l.name)}<small>${esc(money(l.price))} je Stück</small></span>
+      <span class="qty"><button type="button" data-dec="${l.key}" aria-label="Eins weniger">−</button><span>${l.q}</span><button type="button" data-inc="${l.key}" aria-label="Eins mehr">+</button></span>
+      <span class="la">${esc(money(l.q*l.price))}</span>
+    </div>`).join('') : '<p class="bon-empty">Tippe auf eine Marke, um sie zu addieren.</p>';
+  const s=total();
+  $('totalLbl').textContent = s<0 ? 'Auszahlen' : 'Summe';
+  $('total').textContent = money(Math.abs(s));
+  if(s<=0){ given=null; gmode=null; }
+  renderGiven(s);
+  const ch=$('change');
+  if(given!==null && s>0){
+    const g = given;
+    const d=g-s; ch.hidden=false; ch.classList.toggle('short',d<0);
+    $('changeLbl').textContent = d<0 ? 'Es fehlen' : 'Rückgeld';
+    $('givenAmt').textContent = 'gegeben ' + money(g);
+    $('changeAmt').textContent = money(Math.abs(d));
+  } else ch.hidden=true;
+}
+function setQty(key,q){ q=Math.max(0,Math.min(q,99)); if(q===0) order.delete(key); else order.set(key,q); return q; }
+function bump(key,delta){
+  const before=order.get(key)||0, applied=setQty(key,before+delta)-before;
+  const it=itemAt(key);
+  const pkey = it ? autoPfKey(it.k,it.ref) : null;
+  if(applied && pkey) setQty(pkey,(order.get(pkey)||0)+applied);   // Pfand läuft mit
+  renderBoard(); renderBon();
+}
+$('board').addEventListener('click',e=>{ const k=e.target.closest('[data-key]'); if(k) bump(k.dataset.key,1); });
+document.querySelector('.bon').addEventListener('click',e=>{
+  const t=e.target.closest('button'); if(!t) return;
+  if(t.dataset.inc) bump(t.dataset.inc,1);
+  else if(t.dataset.dec) bump(t.dataset.dec,-1);
+  else if(t.dataset.coin){ tapCoin(Number(t.dataset.coin)); renderBon(); }
+  else if(t.dataset.gop==='clear'){ given=null; gmode=null; renderBon(); }
+  else if(t.dataset.gop){ gmode = gmode===t.dataset.gop ? null : t.dataset.gop; renderBon(); }
+  else if(t.id==='btnNext'){ resetGuest(); renderBoard(); renderBon(); }
+});
+
+/* ---------- PIN ---------- */
+let pinBuf='', pinMode='unlock', pinFirst='';
+function pinHash(p){ return 'h'+fnv('festrechner:'+p).toString(36); }   // Salz bewusst unverändert (PIN-Übernahme)
+function openPin(mode){
+  pinMode=mode; pinBuf=''; pinFirst='';
+  $('pinMsg').textContent = mode==='unlock' ? 'Die Einstellungen sind gesperrt.' : 'Neue PIN mit 4 Ziffern eingeben.';
+  $('pinKeys').innerHTML = ['1','2','3','4','5','6','7','8','9','','0','⌫'].map(k=>k?`<button type="button" data-pin="${k}" aria-label="${k==='⌫'?'Löschen':k}">${k}</button>`:'<span></span>').join('');
+  drawPin(); $('pinSheet').hidden=false;
+}
+function drawPin(){ [...$('pinDots').children].forEach((d,i)=>d.classList.toggle('on',i<pinBuf.length)); }
+$('pinSheet').addEventListener('click',e=>{
+  const t=e.target.closest('button'); if(!t) return;
+  if(t.dataset.act==='pin-cancel'){ $('pinSheet').hidden=true; return; }
+  const k=t.dataset.pin; if(!k) return;
+  if(k==='⌫') pinBuf=pinBuf.slice(0,-1); else if(pinBuf.length<4) pinBuf+=k;
+  drawPin();
+  if(pinBuf.length<4) return;
+  if(pinMode==='unlock'){
+    if(pinHash(pinBuf)===store.get(KEY_PIN)){ $('pinSheet').hidden=true; openSettings(); }
+    else { $('pinMsg').textContent='Falsche PIN. Nochmal.'; pinBuf=''; drawPin(); }
+  } else {
+    if(!pinFirst){ pinFirst=pinBuf; pinBuf=''; $('pinMsg').textContent='PIN wiederholen.'; drawPin(); }
+    else if(pinFirst===pinBuf){ store.set(KEY_PIN,pinHash(pinBuf)); $('pinSheet').hidden=true; toast('PIN gesetzt.'); renderSettings(); }
+    else { pinFirst=''; pinBuf=''; $('pinMsg').textContent='Stimmte nicht überein. Neue PIN eingeben.'; drawPin(); }
+  }
+});
+$('btnSettings').addEventListener('click',()=>{ store.get(KEY_PIN) ? openPin('unlock') : openSettings(); });
+
+/* ---------- Einstellungen ---------- */
+let draft=null, dirty=false, pending=null, confirmKey=null, shareCode='', newName='', newTpl='copy';
+const nameTaken = (nm, exceptId) => feste.list.some(f=>f.id!==exceptId && f.cfg.name.trim().toLowerCase()===nm.trim().toLowerCase());
+function readNewInputs(){ const el=$('f-newname'); if(el) newName=el.value; }
+function openSettings(){ draft=clone(cfg); dirty=false; pending=null; confirmKey=null; $('setSheet').hidden=false; $('saveBar').hidden=false; renderSettings(); $('setSheet').scrollTop=0; }
+function closeSettings(){ $('setSheet').hidden=true; $('saveBar').hidden=true; draft=null; }
+function renderSettings(){
+  const hasPin=!!store.get(KEY_PIN);
+  const canScan = BUILD.pwa && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && typeof window.jsQR==='function';
+  $('setBody').innerHTML = `
+    <div class="sheet-head"><h2>Einstellungen</h2></div>
+
+    <div class="panel">
+      <h3>Feste</h3>
+      <div class="fest-list">
+        ${feste.list.map(f=>{ const on=f.id===feste.active; return `
+          <div class="fest${on?' on':''}">
+            <div class="fest-info"><strong>${esc(f.cfg.name)}</strong><span class="meta"><span>Preisliste <b>${fingerprint(f.cfg)}</b></span><span>${itemCount(f.cfg)} Artikel</span></span></div>
+            <span class="ed-tools">
+              ${on ? '<span class="chip chip-on">Aktiv</span>'
+                   : `<button type="button" class="btn" data-fsel="${esc(f.id)}">${confirmKey==='s'+f.id?'Änderungen verwerfen und wechseln':'Auswählen'}</button>`}
+              ${feste.list.length>1 ? (confirmKey==='f'+f.id
+                   ? `<button type="button" class="icon-btn confirm" data-fdel="${esc(f.id)}">Löschen?</button>`
+                   : `<button type="button" class="icon-btn" data-fdelask="${esc(f.id)}" aria-label="Fest ${esc(f.cfg.name)} löschen">${ICON.del}</button>`) : ''}
+            </span>
+          </div>`; }).join('')}
+      </div>
+      <div class="new-fest">
+        <div class="field"><label for="f-newname">Neues Fest anlegen</label>
+          <input class="inp" id="f-newname" maxlength="${LIMITS.name}" placeholder="Name, z. B. Sommerfest 2027" value="${esc(newName)}" autocomplete="off" enterkeyhint="done"></div>
+        <div class="field"><span class="lbl-s" id="tpl-lbl">Vorlage</span>
+          <div class="seg" role="radiogroup" aria-labelledby="tpl-lbl">
+            ${[['copy','Kopie des aktiven'],['empty','Leer'],['sample','Beispiel']].map(([v,l])=>
+              `<button type="button" class="seg-b" role="radio" data-tpl="${v}" aria-checked="${newTpl===v}">${l}</button>`).join('')}
+          </div></div>
+        <button type="button" class="btn btn-primary" data-act="fnew" ${feste.list.length>=LIMITS.feste?'disabled':''}>${confirmKey==='fnew'?'Änderungen verwerfen und anlegen':'Fest anlegen'}</button>
+      </div>
+      ${feste.list.length>=LIMITS.feste?`<p class="note">Höchstens ${LIMITS.feste} Feste. Lösche zuerst ein altes.</p>`:''}
+      <p class="note">Bearbeitet und weitergegeben wird immer das aktive Fest. Wechseln setzt den laufenden Gast zurück.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Aktives Fest</h3>
+      <div class="field"><label for="f-name">Name des Festes</label>
+        <input class="inp" id="f-name" data-f="name" maxlength="${LIMITS.name}" value="${esc(draft.name)}" autocomplete="off"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Marken und Preise</h3>
+      <p>Preise mit Komma, z.&nbsp;B. 3,50. Negative Preise für Pfandrückgabe, z.&nbsp;B. -2,00.</p>
+      <p>Pfand: Eine Kategorie als <strong>Pfandkategorie</strong> markieren. Ihre Artikel sind die Pfandwerte, einer davon ist <strong>Standard</strong>. Bei Getränken und Speisen setzt „Pfand“ den Standard-Pfandwert, bei mehreren Pfandwerten wählst Du daneben aus.</p>
+      ${(()=>{ const dpk=pfCatIdx(draft), opts=pfOptions(draft), dstd=dpk>=0?draft.cats[dpk].pf.std:-1; return draft.cats.map((c,k)=>`
+        <div class="ed-cat" style="--cat:var(--c${c.color})">
+          <div class="ed-cat-head">
+            <input class="inp" id="c-${k}" data-cat="${k}" maxlength="${LIMITS.name}" value="${esc(c.name)}" aria-label="Name der Kategorie" autocomplete="off">
+            <div class="swatches" role="group" aria-label="Farbe">${Array.from({length:NCOL},(_,n)=>`<button type="button" class="sw" style="--cat:var(--c${n})" data-color="${k}:${n}" aria-label="${COLOR_NAMES[n]}" aria-pressed="${c.color===n}"></button>`).join('')}</div>
+            <span class="ed-tools">
+              <button type="button" class="icon-btn" data-cmove="${k}:-1" aria-label="Kategorie nach oben" ${k===0?'disabled':''}>${ICON.up}</button>
+              <button type="button" class="icon-btn" data-cmove="${k}:1" aria-label="Kategorie nach unten" ${k===draft.cats.length-1?'disabled':''}>${ICON.down}</button>
+              ${confirmKey==='c'+k ? `<button type="button" class="icon-btn confirm" data-cdel="${k}">Löschen?</button>` : `<button type="button" class="icon-btn" data-cdelask="${k}" aria-label="Kategorie löschen">${ICON.del}</button>`}
+            </span>
+          </div>
+          <div class="ed-cat-opts">
+            <label class="check sm"><input type="checkbox" data-cpf="${k}" ${c.pf?'checked':''}><span>Pfandkategorie</span></label>
+            ${c.pf ? `<label class="check sm"><input type="checkbox" data-cauto="${k}" ${c.pf.auto?'checked':''}><span>Pfand automatisch hinzufügen</span></label>
+                      ${opts.length?'':'<span class="note">Lege hier einen Pfandartikel mit Preis an, z. B. Pfand Glas 2,00.</span>'}` : ''}
+          </div>
+          <div class="ed-items${k!==dpk && opts.length>1 && c.items.some(it=>it[2]) ? ' pfsel' : ''}">
+            ${c.items.map((it,i)=>`
+              <div class="ed-row">
+                <input class="inp" id="n-${k}-${i}" data-iname="${k}:${i}" maxlength="${LIMITS.name}" value="${esc(it[0])}" aria-label="Artikel" autocomplete="off">
+                <input class="inp price" id="p-${k}-${i}" data-iprice="${k}:${i}" inputmode="decimal" value="${esc(typeof it[1]==='number'?priceInput(it[1]):it[1])}" aria-label="Preis in Euro" autocomplete="off">
+                <span class="ed-side">
+                ${k===dpk
+                  ? `<label class="check sm"><input type="radio" name="pfstd" data-istd="${i}" ${dstd===i?'checked':''} ${priceOf(it[1])>0?'':'disabled'}><span>Standard</span></label>`
+                  : opts.length ? `<span class="ed-pf"><button type="button" class="pf-tog" data-ipf="${k}:${i}" aria-pressed="${!!it[2]}">Pfand</button>${it[2] && opts.length>1 ? `<select class="inp sel" data-iref="${k}:${i}" aria-label="Pfandwert für ${esc(it[0])}">${opts.map(o=>`<option value="${o.i+1}" ${it[2]===o.i+1?'selected':''}>${esc(o.name)} · ${esc(money(o.price))}</option>`).join('')}</select>` : ''}</span>` : ''}
+                <span class="ed-tools">
+                  <button type="button" class="icon-btn" data-imove="${k}:${i}:-1" aria-label="Nach oben" ${i===0?'disabled':''}>${ICON.up}</button>
+                  <button type="button" class="icon-btn" data-imove="${k}:${i}:1" aria-label="Nach unten" ${i===c.items.length-1?'disabled':''}>${ICON.down}</button>
+                  <button type="button" class="icon-btn" data-idel="${k}:${i}" aria-label="Artikel löschen">${ICON.del}</button>
+                </span>
+                </span>
+              </div>`).join('')}
+            <div class="ed-add"><button type="button" class="btn" data-iadd="${k}">+ ${k===dpk?'Pfandartikel':'Artikel'}</button></div>
+          </div>
+        </div>`).join(''); })()}
+      <div class="row-wrap"><button type="button" class="btn" data-act="cadd" ${draft.cats.length>=LIMITS.cats?'disabled':''}>+ Kategorie</button></div>
+    </div>
+
+    <div class="panel">
+      <h3>Aktives Fest an andere Geräte weitergeben</h3>
+      <div class="share">
+        <div class="qrbox"><canvas id="qr" width="10" height="10" aria-label="QR-Code der Preisliste"></canvas></div>
+        <div class="field" style="min-width:0">
+          <div class="meta"><span>Preisliste <b id="sh-fp"></b></span><span id="sh-count"></span><span id="sh-len"></span></div>
+          <p>${BUILD.pwa ? 'Am anderen Gerät: Thekenfuchs öffnen → Einstellungen → „QR scannen“. Die Kennung muss danach auf beiden Geräten gleich sein.' : 'Am anderen Gerät: Einstellungen → Code einfügen. Die Kennung muss danach auf beiden Geräten gleich sein.'}</p>
+          <p class="note">Gezeigt wird die gespeicherte Preisliste. Änderungen erst speichern.</p>
+          <div class="code" id="sh-code"></div>
+          <div class="row-wrap">
+            <button type="button" class="btn" data-act="copy">Code kopieren</button>
+            ${BUILD.pwa ? '<button type="button" class="btn" data-act="sharefile">Als Datei teilen</button>' : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Preisliste übernehmen</h3>
+      ${pending ? `
+        <div class="preview">
+          <strong>${esc(pending.name)}</strong>
+          <div class="meta"><span>Preisliste <b>${fingerprint(pending)}</b></span><span>${pending.cats.reduce((a,c)=>a+c.items.length,0)} Artikel</span></div>
+          ${(()=>{ const pk=pfCatIdx(pending);
+            return `<ul>${pending.cats.map((c,ci)=>`<li>${esc(c.name)}${c.pf?' (Pfandkategorie, automatisch '+(c.pf.auto?'an':'aus')+')':''}: ${c.items.map((i,ii)=>esc(i[0])+' '+esc(money(i[1]))+(c.pf&&c.pf.std===ii?' [Standard]':'')+(i[2]&&pk>=0?' + '+esc(pending.cats[pk].items[i[2]-1][0]):'')).join(', ')||'keine Artikel'}</li>`).join('')}</ul>`; })()}
+          ${(()=>{ const m=feste.list.find(f=>f.cfg.name===pending.name);
+            return m ? `<p class="note">Auf diesem Gerät gibt es schon ein Fest „${esc(m.cfg.name)}“ (Preisliste ${fingerprint(m.cfg)}).</p>
+              <div class="row-wrap"><button type="button" class="btn" data-act="pending-no">Verwerfen</button><button type="button" class="btn" data-act="pending-new" ${feste.list.length>=LIMITS.feste?'disabled':''}>Als neues Fest</button><button type="button" class="btn btn-primary" data-act="pending-upd" data-target="${esc(m.id)}">„${esc(m.cfg.name)}“ aktualisieren</button></div>`
+             : `<div class="row-wrap"><button type="button" class="btn" data-act="pending-no">Verwerfen</button><button type="button" class="btn" data-act="pending-yes">Aktives Fest ersetzen</button><button type="button" class="btn btn-primary" data-act="pending-new" ${feste.list.length>=LIMITS.feste?'disabled':''}>Als neues Fest hinzufügen</button></div>`; })()}
+        </div>` : ''}
+      <div class="row-wrap">
+        ${canScan ? '<button type="button" class="btn btn-primary" data-act="scan">QR scannen</button>' : ''}
+        <label class="btn" for="f-file">Datei wählen</label>
+        <input type="file" id="f-file" accept=".json,.txt,application/json,text/plain" hidden>
+      </div>
+      <div class="field"><label for="f-paste">Code einfügen</label>
+        <textarea class="inp" id="f-paste" placeholder="FR1.…" autocomplete="off" spellcheck="false"></textarea></div>
+      <div class="row-wrap"><button type="button" class="btn" data-act="check">Code prüfen</button></div>
+    </div>
+
+    <div class="panel">
+      <h3>Gerät</h3>
+      <label class="check" for="f-autoadd"><input type="checkbox" id="f-autoadd" ${prefs.autoAdd?'checked':''}><span>Auto-Addieren beim gegebenen Geld</span></label>
+      <p class="note">Aus: Ein Tipp auf 5 € und dann auf 10 € ergibt 10 €. Für mehrere Scheine oder Münzen vorher „+“ tippen.<br>An: Jeder Tipp addiert, 5 € und 10 € ergeben 15 €. Zum Korrigieren „−“ und dann den Betrag tippen. Gilt sofort und nur für dieses Gerät.</p>
+      <div class="row-wrap">
+        <button type="button" class="btn" data-act="pin-set">${hasPin?'PIN ändern':'PIN für Einstellungen setzen'}</button>
+        ${hasPin ? '<button type="button" class="btn" data-act="pin-clear">PIN entfernen</button>' : ''}
+      </div>
+      ${BUILD.demo ? `
+      <div class="wc"><h4>Thekenfuchs installieren</h4><p class="note">Das ist die Demo. Zum Installieren auf iPad oder Windows-Tablet: <a href="../install/">Anleitung und Installationsprofil</a>.</p></div>` : BUILD.pwa ? `
+      <div class="wc">
+        <h4>Installationsprofil für andere iPads</h4>
+        <p class="note">Legt den Thekenfuchs per Profil auf den Home-Bildschirm, im Vollbild und mit gleichem Icon auf jedem Gerät. Am anderen iPad: Profil öffnen → Einstellungen → „Profil geladen“ → Installieren. Danach den Thekenfuchs einmal mit Internet starten.</p>
+        ${location.protocol==='https:' ? `
+          <label class="check sm" for="f-wclock"><input type="checkbox" id="f-wclock" ${wcLock?'checked':''}><span>Icon vor versehentlichem Löschen schützen</span></label>
+          <div class="row-wrap"><button type="button" class="btn" data-act="webclip">Installationsprofil teilen</button></div>
+          <p class="note">Adresse im Profil: <span class="mono">${esc(appUrl())}</span></p>`
+        : '<p class="note">Erst verfügbar, wenn der Thekenfuchs über eine HTTPS-Adresse läuft.</p>'}
+      </div>` : ''}
+      <p class="note">Dieser Rechner speichert keine Verkäufe. Auf dem Gerät liegen nur die Preislisten der Feste und diese Geräte-Einstellungen. Summen leben bis „Neuer Gast“ im Arbeitsspeicher und sind danach weg.</p>
+    </div>
+
+    <div class="panel about">
+      <h3>Über den Thekenfuchs</h3>
+      <p><strong>Antippen statt Kopfrechnen – für Vereinsfeste.</strong><br>Preise auf Tasten · Pfand rechnet mit · Rückgeld auf einen Blick · eine Preisliste für alle Geräte.</p>
+      <p class="note">Rechenhilfe, keine Kasse: Der Thekenfuchs speichert keine Verkäufe.</p>
+      <p>Entwickelt von <strong>Jochen G. Fuchs</strong> · <a href="https://efuchs.net" target="_blank" rel="noopener">efuchs.net</a></p>
+      <p class="note">Version ${esc(BUILD.version)}. Veröffentlicht unter der MIT-Lizenz. Enthält die Schrift Barlow (SIL Open Font License 1.1), qrcode-generator von Kazuhiko Arase (MIT) und jsQR von Cosmo Wolfe (Apache License 2.0). Die Lizenztexte liegen dem Paket als LIZENZEN.md bei.</p>
+    </div>`;
+  refreshShare();
+}
+function readDraftInputs(){
+  // Eingaben in draft übernehmen; Preise bleiben als String, bis gespeichert wird.
+  const n=$('f-name'); if(n) draft.name=n.value;
+  document.querySelectorAll('[data-cat]').forEach(el=>{ draft.cats[+el.dataset.cat].name=el.value; });
+  document.querySelectorAll('[data-iname]').forEach(el=>{ const [k,i]=el.dataset.iname.split(':').map(Number); draft.cats[k].items[i][0]=el.value; });
+  document.querySelectorAll('[data-iprice]').forEach(el=>{ const [k,i]=el.dataset.iprice.split(':').map(Number); draft.cats[k].items[i][1]=el.value; });
+}
+function move(arr,i,d){ const j=i+d; if(j<0||j>=arr.length) return; [arr[i],arr[j]]=[arr[j],arr[i]]; }
+$('setSheet').addEventListener('input',e=>{ if(e.target.matches('[data-f],[data-cat],[data-iname],[data-iprice]')){ dirty=true; e.target.classList.remove('bad'); $('saveMsg').textContent=''; } });
+$('setSheet').addEventListener('keydown',e=>{ if(e.target.id==='f-newname' && e.key==='Enter'){ e.preventDefault(); const b=document.querySelector('[data-act="fnew"]'); if(b) b.click(); } });
+$('setSheet').addEventListener('input',e=>{ if(e.target.id==='f-newname') e.target.classList.remove('bad'); });
+function remapPf(map){
+  // Nach Verschieben/Löschen in der Pfandkategorie: Standard und Verweise nachziehen. map(alterIndex) → neuer Index | -1
+  const pk=pfCatIdx(draft); if(pk<0) return;
+  const pf=draft.cats[pk].pf, pos=pfOptions(draft).map(o=>o.i);
+  let ns=map(pf.std); if(ns<0 || !pos.includes(ns)) ns = pos.length ? pos[0] : 0; pf.std=ns;
+  draft.cats.forEach((c,ci)=>{ if(ci===pk) return; c.items.forEach(it=>{ if(it[2]){ const n=map(it[2]-1); it[2] = n>=0 ? n+1 : (pos.includes(ns) ? ns+1 : 0); } }); });
+}
+function setPfCat(k,on){
+  draft.cats.forEach(c=>{ delete c.pf; c.items.forEach(it=>{ if(it[2]) it[2]=0; }); });
+  if(on){ draft.cats[k].pf={auto:true,std:0}; const pos=pfOptions(draft); draft.cats[k].pf.std = pos.length ? pos[0].i : 0; }
+}
+$('setSheet').addEventListener('change',async e=>{
+  const ds=e.target.dataset||{};
+  if(e.target.id==='f-wclock'){ wcLock=e.target.checked; return; }
+  if(e.target.id==='f-autoadd'){ prefs.autoAdd=e.target.checked; savePrefs(); gmode=null; renderBon(); toast('Auto-Addieren '+(prefs.autoAdd?'an':'aus')+'.'); return; }
+  if(ds.cpf!==undefined){ readDraftInputs(); setPfCat(+ds.cpf, e.target.checked); dirty=true; confirmKey=null; renderSettings(); return; }
+  if(ds.cauto!==undefined){ readDraftInputs(); draft.cats[+ds.cauto].pf.auto=e.target.checked; dirty=true; return; }
+  if(ds.istd!==undefined){ readDraftInputs(); draft.cats[pfCatIdx(draft)].pf.std=+ds.istd; dirty=true; return; }
+  if(ds.iref){ readDraftInputs(); const [k,i]=ds.iref.split(':').map(Number); draft.cats[k].items[i][2]=+e.target.value; dirty=true; return; }
+  if(e.target.id!=='f-file') return;
+  const f=e.target.files && e.target.files[0]; if(!f) return;
+  try{ readDraftInputs(); pending=await decodeText(await f.text()); renderSettings(); }
+  catch(err){ toast(err.message||'Datei nicht lesbar.'); }
+});
+$('setSheet').addEventListener('click',async e=>{
+  const t=e.target.closest('button'); if(!t||!draft) return;
+  const d=t.dataset, act=d.act;
+  const structural = d.color||d.cmove||d.cdel||d.cdelask||d.imove||d.idel||d.iadd||d.ipf||act==='cadd';
+  if(structural){ readDraftInputs(); dirty=true; }
+  if(d.color){ const [k,n]=d.color.split(':').map(Number); draft.cats[k].color=n; }
+  else if(d.cmove){ const [k,dd]=d.cmove.split(':').map(Number); move(draft.cats,k,dd); }
+  else if(d.cdelask){ confirmKey='c'+d.cdelask; renderSettings(); return; }
+  else if(d.cdel){ const k=+d.cdel; if(draft.cats[k].pf) setPfCat(k,false); draft.cats.splice(k,1); confirmKey=null; }
+  else if(d.imove){ const [k,i,dd]=d.imove.split(':').map(Number); const j=i+dd; move(draft.cats[k].items,i,dd); if(draft.cats[k].pf) remapPf(x=>x===i?j:x===j?i:x); }
+  else if(d.idel){ const [k,i]=d.idel.split(':').map(Number); draft.cats[k].items.splice(i,1); if(draft.cats[k].pf) remapPf(x=>x<i?x:x>i?x-1:-1); }
+  else if(d.ipf){
+    const [k,i]=d.ipf.split(':').map(Number); const it=draft.cats[k].items[i];
+    const pk=pfCatIdx(draft), pos=pfOptions(draft).map(o=>o.i), std=pk>=0?draft.cats[pk].pf.std:-1;
+    it[2] = it[2] ? 0 : (pos.includes(std) ? std+1 : (pos.length ? pos[0]+1 : 0));
+  }
+  else if(d.iadd){ const k=+d.iadd; draft.cats[k].items.push(['','']); renderSettings(); const el=$('n-'+k+'-'+(draft.cats[k].items.length-1)); if(el) el.focus(); return; }
+  else if(act==='cadd'){ draft.cats.push({name:'Neue Kategorie',color:draft.cats.length%NCOL,items:[]}); }
+  else if(act==='copy'){ copyText(shareCode); return; }
+  else if(act==='sharefile'){ shareFile(); return; }
+  else if(act==='scan'){ startScan(); return; }
+  else if(act==='check'){ readDraftInputs(); try{ pending=await decodeText($('f-paste').value); renderSettings(); }catch(err){ toast(err.message); } return; }
+  else if(act==='pending-no'){ readDraftInputs(); pending=null; renderSettings(); return; }
+  else if(act==='pending-yes'){ saveCfg(pending); pending=null; draft=clone(cfg); dirty=false; confirmKey=null; renderSettings(); toast('Aktives Fest ersetzt.'); return; }
+  else if(act==='pending-upd'){ const f=feste.list.find(x=>x.id===d.target); if(f){ f.cfg=pending; feste.active=f.id; afterChange(); } pending=null; draft=clone(cfg); dirty=false; confirmKey=null; renderSettings(); toast('Fest aktualisiert und aktiv.'); return; }
+  else if(act==='pending-new'){ try{ addFest(pending); pending=null; draft=clone(cfg); dirty=false; confirmKey=null; renderSettings(); toast('Neues Fest angelegt und aktiv.'); }catch(err){ toast(err.message); } return; }
+  else if(d.fsel){
+    readDraftInputs();
+    if(dirty && confirmKey!=='s'+d.fsel){ confirmKey='s'+d.fsel; renderSettings(); return; }
+    selectFest(d.fsel); draft=clone(cfg); dirty=false; confirmKey=null; pending=null; renderSettings(); toast('„'+cfg.name+'“ ist aktiv.'); return;
+  }
+  else if(d.fdelask){ readDraftInputs(); readNewInputs(); confirmKey='f'+d.fdelask; renderSettings(); return; }
+  else if(d.fdel){
+    readDraftInputs(); const wasActive = d.fdel===feste.active; const name=(feste.list.find(f=>f.id===d.fdel)||{cfg:{name:''}}).cfg.name;
+    deleteFest(d.fdel); confirmKey=null;
+    if(wasActive){ draft=clone(cfg); dirty=false; }
+    renderSettings(); toast('„'+name+'“ gelöscht.'); return;
+  }
+  else if(d.tpl){ readDraftInputs(); readNewInputs(); newTpl=d.tpl; renderSettings(); return; }
+  else if(act==='fnew'){
+    readDraftInputs(); readNewInputs();
+    const nm=newName.trim(), inp=$('f-newname');
+    if(!nm){ inp.classList.add('bad'); inp.focus(); toast('Bitte einen Namen für das neue Fest eingeben.'); return; }
+    if(nameTaken(nm)){ inp.classList.add('bad'); inp.focus(); toast('„'+nm+'“ gibt es schon. Bitte anderen Namen wählen.'); return; }
+    if(dirty && confirmKey!=='fnew'){ confirmKey='fnew'; renderSettings(); return; }
+    const c = newTpl==='empty' ? normalize({name:nm,cats:[{name:'Speisen',color:0,items:[]},{name:'Getränke',color:1,items:[]}]})
+            : newTpl==='copy' ? normalize({name:nm,cats:clone(cfg.cats)})
+            : normalize({...clone(SAMPLE),name:nm});
+    try{ addFest(c); newName=''; draft=clone(cfg); dirty=false; confirmKey=null; pending=null; renderSettings(); toast('„'+nm+'“ angelegt und aktiv.'); }catch(err){ toast(err.message); }
+    return;
+  }
+  else if(act==='pin-set'){ readDraftInputs(); openPin('set'); return; }
+  else if(act==='webclip'){ readDraftInputs(); shareProfile(); return; }
+  else if(act==='pin-clear'){ readDraftInputs(); store.del(KEY_PIN); renderSettings(); toast('PIN entfernt.'); return; }
+  else return;
+  if(structural){ confirmKey=null; renderSettings(); }
+});
+$('saveBar').addEventListener('click',e=>{
+  const t=e.target.closest('button'); if(!t) return;
+  if(t.dataset.act==='discard'){ closeSettings(); return; }
+  if(t.dataset.act==='save'){
+    readDraftInputs();
+    let bad=null, badMsg='';
+    const out={name:draft.name,cats:[]}, dpk=pfCatIdx(draft), keep={};   // keep: alter → neuer Index in der Pfandkategorie
+    draft.cats.forEach((c,k)=>{
+      const items=[];
+      c.items.forEach((it,i)=>{
+        const name=String(it[0]).trim(); const raw=it[1];
+        if(!name && String(raw).trim()==='') return;                 // leere Zeile ignorieren
+        const p = typeof raw==='number' ? raw : parsePrice(raw);
+        if(!name){ bad=bad||$('n-'+k+'-'+i); return; }
+        if(p===null){ bad=bad||$('p-'+k+'-'+i); return; }
+        if(k===dpk) keep[i]=items.length;
+        items.push(it[2]&&k!==dpk?[name,p,it[2]]:[name,p]);
+      });
+      const oc={name:c.name,color:c.color,items}; if(c.pf) oc.pf={auto:!!c.pf.auto,std:keep[c.pf.std]??-1};
+      out.cats.push(oc);
+    });
+    if(dpk>=0) out.cats.forEach((c,k)=>{ if(k!==dpk) c.items.forEach(it=>{ if(it[2]){ const n=keep[it[2]-1]; if(n===undefined) it.length=2; else it[2]=n+1; } }); });
+    document.querySelectorAll('.inp.bad').forEach(x=>x.classList.remove('bad'));
+    if(!bad && nameTaken(String(draft.name||''), feste.active)){ bad=$('f-name'); badMsg='Ein anderes Fest heißt schon so.'; }
+    if(bad){ bad.classList.add('bad'); bad.focus(); $('saveMsg').textContent = badMsg || (bad.id.startsWith('p-') ? 'Preis prüfen, z. B. 3,50' : 'Artikel braucht einen Namen'); return; }
+    try{
+      const ok=saveCfg(normalize(out)); draft=clone(cfg); dirty=false; renderSettings();
+      toast(ok?'Gespeichert.':'Gespeichert, aber das Gerät erlaubt kein dauerhaftes Speichern.');
+    }catch(err){ $('saveMsg').textContent=err.message; }
+  }
+});
+
+/* ---------- Teilen ---------- */
+async function refreshShare(){
+  shareCode = await encodeCfg(cfg);
+  const payload = shareLink(shareCode);
+  const set=(id,v)=>{ const el=$(id); if(el) el.textContent=v; };
+  set('sh-code', payload); set('sh-fp', fingerprint(cfg));
+  set('sh-count', cfg.cats.reduce((a,c)=>a+c.items.length,0)+' Artikel');
+  set('sh-len', payload.length+' Zeichen');
+  const cv=$('qr'); if(!cv) return;
+  if(typeof window.qrcode!=='function'){ cv.replaceWith(Object.assign(document.createElement('p'),{className:'note',textContent:'QR-Bibliothek nicht geladen.'})); return; }
+  const q=qrcode(0,'M'); q.addData(payload,'Byte'); q.make();
+  const n=q.getModuleCount(), quiet=4, scale=Math.max(4,Math.floor(600/(n+quiet*2)));
+  const px=(n+quiet*2)*scale; cv.width=px; cv.height=px;
+  const g=cv.getContext('2d'); g.fillStyle='#FFFFFF'; g.fillRect(0,0,px,px); g.fillStyle='#000000';
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(q.isDark(r,c)) g.fillRect((c+quiet)*scale,(r+quiet)*scale,scale,scale);
+}
+async function copyText(s){
+  try{ await navigator.clipboard.writeText(s); toast('Code kopiert.'); }
+  catch(e){ const el=$('sh-code'); const r=document.createRange(); r.selectNodeContents(el); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('Code markiert. Jetzt kopieren.'); }
+}
+/* ---------- Installationsprofil (Web Clip) ---------- */
+let wcLock = true;
+const appUrl = () => location.origin + location.pathname.replace(/index\.html$/,'');
+function uuid4(){ try{ return crypto.randomUUID().toUpperCase(); }catch(e){ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{ const r=Math.random()*16|0; return (c==='x'?r:(r&3|8)).toString(16); }).toUpperCase(); } }
+function makeProfile(url, removable){
+  const x = (s) => esc(s);
+  const icon = (BUILD.icon||'').replace(/(.{68})/g,'$1\n\t\t\t');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>PayloadContent</key>
+	<array>
+		<dict>
+			<key>FullScreen</key><true/>
+			<key>Icon</key>
+			<data>
+			${icon}
+			</data>
+			<key>IgnoreManifestScope</key><false/>
+			<key>IsRemovable</key>${removable?'<true/>':'<false/>'}
+			<key>Label</key><string>Thekenfuchs</string>
+			<key>PayloadDisplayName</key><string>Thekenfuchs (Web Clip)</string>
+			<key>PayloadIdentifier</key><string>net.efuchs.thekenfuchs.webclip</string>
+			<key>PayloadType</key><string>com.apple.webClip.managed</string>
+			<key>PayloadUUID</key><string>${uuid4()}</string>
+			<key>PayloadVersion</key><integer>1</integer>
+			<key>Precomposed</key><true/>
+			<key>URL</key><string>${x(url)}</string>
+		</dict>
+	</array>
+	<key>PayloadDescription</key><string>Thekenfuchs – Antippen statt Kopfrechnen, für Vereinsfeste. Legt die Web-App auf den Home-Bildschirm. Rechenhilfe, keine Kasse: Der Thekenfuchs speichert keine Verkäufe.</string>
+	<key>PayloadDisplayName</key><string>Thekenfuchs</string>
+	<key>PayloadIdentifier</key><string>net.efuchs.thekenfuchs</string>
+	<key>PayloadOrganization</key><string>Thekenfuchs · efuchs.net</string>
+	<key>PayloadRemovalDisallowed</key><false/>
+	<key>PayloadType</key><string>Configuration</string>
+	<key>PayloadUUID</key><string>${uuid4()}</string>
+	<key>PayloadVersion</key><integer>1</integer>
+</dict>
+</plist>
+`;
+}
+async function shareProfile(){
+  const el=$('f-wclock'); if(el) wcLock=el.checked;
+  const xml=makeProfile(appUrl(), !wcLock), fname='thekenfuchs.mobileconfig', type='application/x-apple-aspen-config';
+  try{
+    const file=new File([xml],fname,{type});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:'Thekenfuchs installieren'}); return; }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([xml],{type})); a.download=fname;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+}
+window.__makeProfile = makeProfile;
+
+async function shareFile(){
+  const json = JSON.stringify(cfg,null,2);
+  const fname = 'preisliste-'+fingerprint(cfg)+'.json';
+  try{
+    const file = new File([json],fname,{type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:'Preisliste '+cfg.name}); return; }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([json],{type:'application/json'})); a.download=fname;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+}
+
+/* ---------- Scannen (nur PWA) ---------- */
+let scanStream=null, scanRaf=0;
+async function startScan(){
+  readDraftInputs();
+  $('scanSheet').hidden=false; $('scanMsg').textContent='Kamera wird gestartet …';
+  try{
+    scanStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});
+    const v=$('scanVideo'); v.srcObject=scanStream; await v.play();
+    $('scanMsg').textContent='Halte die Kamera auf den QR-Code am anderen Gerät.';
+    const cv=document.createElement('canvas'), g=cv.getContext('2d',{willReadFrequently:true});
+    const tick=async()=>{
+      if(!scanStream) return;
+      if(v.readyState>=2 && v.videoWidth){
+        const w=Math.min(960,v.videoWidth), h=Math.round(v.videoHeight*w/v.videoWidth);
+        cv.width=w; cv.height=h; g.drawImage(v,0,0,w,h);
+        const res=jsQR(g.getImageData(0,0,w,h).data,w,h,{inversionAttempts:'dontInvert'});
+        if(res && /FR[01]\./.test(res.data)){
+          try{ pending=await decodeText(res.data); stopScan(); renderSettings(); toast('Preisliste erkannt. Bitte prüfen.'); return; }
+          catch(err){ $('scanMsg').textContent=err.message; }
+        }
+      }
+      scanRaf=requestAnimationFrame(tick);
+    };
+    tick();
+  }catch(err){ $('scanMsg').textContent='Kamera nicht verfügbar. Erlaube den Kamerazugriff oder nutze „Code einfügen“.'; }
+}
+function stopScan(){ cancelAnimationFrame(scanRaf); if(scanStream){ scanStream.getTracks().forEach(t=>t.stop()); scanStream=null; } $('scanVideo').srcObject=null; $('scanSheet').hidden=true; }
+$('scanSheet').addEventListener('click',e=>{ if(e.target.closest('[data-act="scan-stop"]')) stopScan(); });
+
+/* ---------- Bildschirm wach halten ---------- */
+let wake=null;
+async function keepAwake(){ try{ if('wakeLock' in navigator && document.visibilityState==='visible' && !wake){ wake=await navigator.wakeLock.request('screen'); wake.addEventListener('release',()=>{ wake=null; }); } }catch(e){} }
+document.addEventListener('pointerdown',keepAwake,{passive:true});
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') keepAwake(); });
+
+/* ---------- Start ---------- */
+if(BUILD.demo){
+  $('demoBar').hidden=false; document.body.classList.add('is-demo');
+  $('demoReset').addEventListener('click',()=>{ memStore.clear(); location.reload(); });
+}
+renderAll();
+if(BUILD.pwa){
+  if(!BUILD.demo){
+    try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+    if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{}); }
+  }
+  const h=location.hash;
+  if(h.startsWith('#cfg=')){
+    decodeText(h.slice(5)).then(p=>{ history.replaceState(null,'',location.pathname); openSettings(); pending=p; renderSettings(); }).catch(err=>toast(err.message));
+  }
+}
+window.__thekenfuchs = { total, order:()=>order, cfg:()=>cfg, feste:()=>feste, encodeCfg, decodeText, fingerprint };
+})();
+</script>

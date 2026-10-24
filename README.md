@@ -1,0 +1,63 @@
+# Thekenfuchs
+
+**Antippen statt Kopfrechnen – Thekenrechner für Vereinsfeste.**
+Produkte mit Preisen auf Tasten · Pfandautomatik · Rückgeld auf einen Blick · Preisliste per QR auf alle Geräte verteilbar.
+
+*Rechenhilfe, keine Kasse: Der Thekenfuchs speichert keine Verkäufe.*
+
+- Demo: https://e-fuchs.github.io/thekenfuchs/demo/
+- App (zum Installieren): https://e-fuchs.github.io/thekenfuchs/app/
+- Installation: https://e-fuchs.github.io/thekenfuchs/install/
+- Download: https://github.com/E-Fuchs/thekenfuchs/releases/latest/download/thekenfuchs.zip
+
+Offline-Web-App (PWA) für Tablet und Smartphone – iPad, Android, Windows. Kein App Store, kein Server,
+keine Daten über Verkäufe.
+
+## Aufbau
+
+| Pfad | Inhalt |
+|---|---|
+| `src/` | App-Quelltext (`head.html`, `body.html`) – eine Datei, alles inline |
+| `build.py` | Baut `dist/site/` (Pages), `dist/release/` (ZIP + Profil), `dist/artifact/` |
+| `site/` | Startseite und Installationsseite (statisch), werden nach `dist/site/` kopiert |
+| `test_e2e.py` | End-to-End-Tests mit Playwright (Chromium) |
+| `.github/workflows/` | `pages.yml` (Push auf `main` → Pages), `release.yml` (Tag `v*` → Release) |
+
+Veröffentlichte Struktur unter `/thekenfuchs/`:
+
+| Pfad | Zweck |
+|---|---|
+| `/` | Startseite |
+| `/demo/` | Demo, Speicher nur im Arbeitsspeicher, kein Service Worker |
+| `/app/` | Installierbare App (Manifest, Service Worker, Scope `/thekenfuchs/app/`) |
+| `/install/` | Installationsanleitung + `thekenfuchs.mobileconfig` |
+
+## Lokal bauen und testen
+
+```bash
+npm ci
+pip install pillow playwright && python -m playwright install chromium
+python build.py                 # Default-URL https://e-fuchs.github.io/thekenfuchs/app/
+python test_e2e.py
+```
+
+## Version veröffentlichen
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+## Leitplanken (nicht ändern)
+
+- Keine Historie, keine Zähler, keine Tagessumme, kein Export von Verkäufen.
+- CSP `connect-src 'none'` in App und Demo – kein Datenversand, keine externen Ressourcen.
+- Die App-Adresse `https://e-fuchs.github.io/thekenfuchs/app/` ist fest: installierte Apps,
+  Preislisten und Installationsprofile hängen daran. Pfad nicht ändern. Eine eigene Domain auf
+  `e-fuchs.github.io` nur vor dem ersten produktiv eingerichteten Gerät setzen (dann
+  `build.py --url` anpassen), danach nie mehr.
+- Speicherschlüssel beginnen mit `thekenfuchs.` (gemeinsamer Ursprung mit anderen Projekten
+  auf `e-fuchs.github.io`).
+
+## Lizenz
+
+MIT – Copyright (c) 2026 Jochen G. Fuchs (https://efuchs.net). Komponenten Dritter siehe `LIZENZEN.md`.

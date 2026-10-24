@@ -1,0 +1,55 @@
+# Baut den Thekenfuchs, testet ihn und veröffentlicht dist/site auf GitHub Pages
+# (https://e-fuchs.github.io/thekenfuchs/). Läuft bei jedem Push auf main.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # für git describe (Versionsnummer aus Tags)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Abhängigkeiten
+        run: |
+          npm ci
+          pip install pillow playwright
+          python -m playwright install --with-deps chromium
+      - name: Bauen
+        run: python build.py --version "$(git describe --tags --always)"
+      - name: Testen
+        run: python test_e2e.py
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
