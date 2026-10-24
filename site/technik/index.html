@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Thekenfuchs – Technik</title>
+<meta name="description" content="Wie der Thekenfuchs gebaut ist: Progressive Web App ohne Framework und ohne Server, Service Worker, Preisliste per QR-Code im URL-Fragment, Datenversand per CSP gesperrt, Playwright-Tests, GitHub Actions.">
+<meta name="author" content="Jochen G. Fuchs, efuchs.net">
+<meta name="theme-color" content="#0E6A4C" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101513" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="Thekenfuchs – Technik">
+<meta property="og:description" content="Progressive Web App ohne Framework und ohne Server – Architektur, Entscheidungen, Qualitätssicherung.">
+<meta property="og:image" content="https://e-fuchs.github.io/thekenfuchs/assets/screen-theke-light.webp">
+<link rel="icon" href="../app/icon-192.png">
+<link rel="apple-touch-icon" href="../app/icon-180.png">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<a class="skip" href="#inhalt">Zum Inhalt</a>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../assets/icon-512.png" alt="" width="32" height="32">Thekenfuchs</a>
+    <nav aria-label="Seiten">
+      <a href="../demo/">Demo</a>
+      <a href="../install/">Installieren</a>
+      <a class="nav-all" href="./" aria-current="page">Technik</a>
+      <a class="nav-all" href="../../">Alle Projekte</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inhalt">
+  <div class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">Unter der Haube</p>
+      <h1>Technik</h1>
+      <p class="lead" style="max-width:62ch">Der Thekenfuchs ist eine Progressive Web App ohne Framework und ohne Server. Eine einzige HTML-Datei, die nach dem ersten Aufruf vollständig offline läuft und keine Daten verschickt – das ist Absicht, nicht Einschränkung.</p>
+      <nav class="jump" aria-label="Abschnitte">
+        <a href="#steckbrief">Steckbrief</a>
+        <a href="#architektur">Architektur</a>
+        <a href="#entscheidungen">Entscheidungen</a>
+        <a href="#qualitaet">Qualitätssicherung</a>
+      </nav>
+    </div>
+  </div>
+
+  <section class="section" id="steckbrief" aria-labelledby="h-steckbrief">
+    <div class="wrap">
+      <div class="section-head"><h2 id="h-steckbrief">Steckbrief</h2></div>
+      <div class="spec-wrap">
+        <table class="spec">
+          <tr><th scope="row">Typ</th><td>Progressive Web App – installierbar, offline-fähig</td></tr>
+          <tr><th scope="row">Plattformen</th><td>iPad und iPhone (Safari), Android (Chrome, Samsung Internet), Windows (Edge, Chrome) – Tablet und Smartphone</td></tr>
+          <tr><th scope="row">Frontend</th><td>HTML, CSS und JavaScript ohne Framework, alles in einer Datei; Schriften als <code>data:</code>-URI eingebettet</td></tr>
+          <tr><th scope="row">Offline</th><td>Service Worker (Cache-first, Scope <code>/thekenfuchs/app/</code>), Web App Manifest</td></tr>
+          <tr><th scope="row">Speicher</th><td><code>localStorage</code> für Preislisten und Geräte-Einstellungen; der laufende Gast nur im Arbeitsspeicher</td></tr>
+          <tr><th scope="row">Datenaustausch</th><td>QR-Code mit der Preisliste im URL-Fragment (<code>CompressionStream</code> deflate-raw, base64url); alternativ Datei, Web Share oder Code zum Einfügen</td></tr>
+          <tr><th scope="row">QR-Code</th><td>Erzeugen mit qrcode-generator, Lesen mit jsQR über <code>getUserMedia</code></td></tr>
+          <tr><th scope="row">iOS-Installation</th><td>Konfigurationsprofil mit Web Clip (<code>.mobileconfig</code>), von der App selbst erzeugt oder beim Build</td></tr>
+          <tr><th scope="row">Weitere APIs</th><td>Screen Wake Lock, Web Share, Storage Persistence</td></tr>
+          <tr><th scope="row">Sicherheit</th><td>Content-Security-Policy mit <code>connect-src 'none'</code>, keine externen Ressourcen; PIN als Bedienschutz für die Einstellungen <small>(kein Zugriffsschutz)</small></td></tr>
+          <tr><th scope="row">Größe</th><td>rund 530 KB, rund 200 KB komprimiert übertragen – inklusive Schriften und QR-Bibliotheken</td></tr>
+          <tr><th scope="row">Build</th><td>Python-Skript <code>build.py</code>: App, Demo, Installationsprofil, Release-ZIP, Icons</td></tr>
+          <tr><th scope="row">Tests</th><td>Playwright (Chromium), 80 automatische Prüfungen</td></tr>
+          <tr><th scope="row">CI/CD</th><td>GitHub Actions: jeder Push → Build, Tests, GitHub Pages; Versions-Tag → Release mit ZIP und Profil</td></tr>
+          <tr><th scope="row">Betrieb</th><td>GitHub Pages liefert nur aus – im Betrieb gibt es keinen Server</td></tr>
+          <tr><th scope="row">Lizenz</th><td>MIT · Bausteine: qrcode-generator 1.4.4 (MIT), jsQR 1.4.0 (Apache 2.0), Barlow (SIL OFL 1.1)</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="architektur" aria-labelledby="h-architektur">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="h-architektur">Architektur</h2>
+        <p class="lead">Das Netz braucht der Thekenfuchs genau einmal: zum Installieren. Danach arbeitet jedes Gerät für sich, die Geräte sprechen nur per QR-Code miteinander.</p>
+      </div>
+      <div class="arch" role="img" aria-label="GitHub Pages liefert die App einmal aus. Jedes Gerät hält App-Dateien im Service Worker, Preislisten im localStorage und den aktuellen Gast im Arbeitsspeicher. Preislisten wandern per QR-Code von Gerät A zu Gerät B. Im Betrieb gibt es keinen Server, die CSP sperrt jeden Datenversand.">
+        <div class="node">
+          <h3>GitHub Pages</h3>
+          <p>Statische Dateien: App, Service Worker, Manifest, Installationsprofil.</p>
+        </div>
+        <div class="edge"><span class="arrow">→</span><span>einmal über HTTPS</span></div>
+        <div class="node device">
+          <h3>Gerät A</h3>
+          <div class="layer"><b>Service Worker</b>App-Dateien für den Offline-Betrieb</div>
+          <div class="layer"><b>localStorage</b>Preislisten der Feste, Geräte-Einstellungen</div>
+          <div class="layer"><b>Arbeitsspeicher</b>der aktuelle Gast – weg bei „Neuer Gast“</div>
+        </div>
+        <div class="edge"><span class="arrow">↔</span><span>QR-Code: Preisliste im URL-Fragment</span></div>
+        <div class="node device">
+          <h3>Gerät B, C, …</h3>
+          <p>Gleiche App, eigene Kopie der Preisliste. Die Kennung „Preisliste XXXX“ zeigt, ob alle gleich rechnen.</p>
+        </div>
+        <div class="arch-foot"><span>Im Betrieb kein Server</span><span class="sep">·</span><span>CSP <code>connect-src 'none'</code></span><span class="sep">·</span><span>keine Verkaufsdaten</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="entscheidungen" aria-labelledby="h-entscheidungen">
+    <div class="wrap">
+      <div class="section-head"><h2 id="h-entscheidungen">Entscheidungen</h2></div>
+      <div class="decisions">
+        <article class="decision">
+          <h3>PWA statt nativer App</h3>
+          <p>Eine Codebasis für iPad, Android und Windows, installiert direkt aus dem Browser.</p>
+          <p class="why">Ohne App Store bliebe für iOS nur die Ad-hoc-Verteilung: höchstens 100 registrierte Geräte pro Jahr und jährliches Neusignieren. Für Vereins-iPads und geliehene Geräte ungeeignet. Das Installationsprofil gibt trotzdem allen iPads das gleiche Symbol.</p>
+        </article>
+        <article class="decision">
+          <h3>Kein Backend</h3>
+          <p>Nichts zu betreiben, nichts zu sichern, kein Ausfallpunkt im Festzelt.</p>
+          <p class="why">Ein Vereinsfest braucht Preise und Rechnen, keine Synchronisation in Echtzeit. Die Preisliste ist klein genug für einen QR-Code.</p>
+        </article>
+        <article class="decision">
+          <h3>Datensparsamkeit als Architektur</h3>
+          <p>Gespeichert werden nur Preislisten. Summen leben im Arbeitsspeicher, die CSP sperrt jeden Datenversand.</p>
+          <p class="why">Das ist Datenschutz und zugleich die Grundlage der Abgrenzung „Rechenhilfe, keine Kasse“: keine Aufzeichnung von Verkäufen, keine Verbindung zu einer Kasse. Keine Steuerberatung – siehe Startseite.</p>
+        </article>
+        <article class="decision">
+          <h3>Preisliste im URL-Fragment</h3>
+          <p>Komprimiert mit deflate-raw und als base64url kodiert: 13 Artikel ergeben rund 360 Zeichen – bequem für einen QR-Code.</p>
+          <p class="why">Das Fragment hinter <code>#</code> verlässt den Browser nie. Ein Prüfwert über die Preisliste wird zur Kennung, die Gleichstand zwischen Geräten sichtbar macht.</p>
+        </article>
+        <article class="decision">
+          <h3>Eine Datei, kein Framework</h3>
+          <p>Alles inline, gebaut von einem kurzen Python-Skript.</p>
+          <p class="why">Keine Build-Kette, die in fünf Jahren nicht mehr läuft. Die Datei funktioniert auch lokal unter Windows ohne Webserver.</p>
+        </article>
+        <article class="decision">
+          <h3>Demo getrennt von der App</h3>
+          <p>Die Demo hält alles im Arbeitsspeicher und registriert keinen Service Worker.</p>
+          <p class="why">App und Demo teilen sich einen Ursprung und damit den Browser-Speicher. So überschreibt ein Klick in der Demo nie die echten Preislisten eines Vereins-iPads.</p>
+        </article>
+        <article class="decision">
+          <h3>Feste Adresse</h3>
+          <p>Die App liegt dauerhaft unter <code>e-fuchs.github.io/thekenfuchs/app/</code>.</p>
+          <p class="why">Ursprung und Pfad bestimmen Speicher, Installation und Updates. Ein späterer Umzug würde installierte Geräte von Updates abschneiden.</p>
+        </article>
+        <article class="decision">
+          <h3>Bedienung vor Funktionsfülle</h3>
+          <p>Große Tasten im Stil von Wertmarken, Pfandautomatik, Geldtasten mit „+“ und „−“.</p>
+          <p class="why">Am Ausschank tippen wechselnde Helfer im Gedränge. Jeder zusätzliche Schritt kostet dort mehr als jede fehlende Funktion.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="qualitaet" aria-labelledby="h-qualitaet">
+    <div class="wrap">
+      <div class="section-head"><h2 id="h-qualitaet">Qualitätssicherung</h2></div>
+      <div class="qa">
+        <div class="card">
+          <h3>80 automatische Prüfungen</h3>
+          <ul>
+            <li>Summe, Rückgeld, „+“/„−“ und Auto-Addieren</li>
+            <li>Pfandautomatik mit Standard- und gewähltem Pfandwert</li>
+            <li>Feste anlegen, wechseln, löschen, Übernahme alter Daten</li>
+            <li>QR-Code erzeugen und mit jsQR zurücklesen</li>
+            <li>PIN, Neustart ohne Netz, Telefonbreite</li>
+            <li>Demo-Isolation und Speicherinhalt: keine Beträge im Speicher</li>
+          </ul>
+          <p class="lead">Die Tests laufen in Chromium. Safari auf iPad und iPhone wird zusätzlich auf echten Geräten geprüft.</p>
+        </div>
+        <div class="card">
+          <h3>Bei jedem Push</h3>
+          <p class="pipeline"><span>Build</span><i>→</i><span>Tests</span><i>→</i><span>GitHub Pages</span></p>
+          <p>Schlägt ein Test fehl, wird nicht veröffentlicht. Ein Versions-Tag erzeugt zusätzlich ein Release mit <code>thekenfuchs.zip</code> und dem Installationsprofil.</p>
+          <p><a href="https://github.com/E-Fuchs/thekenfuchs">Quellcode auf GitHub</a> · <a href="https://github.com/E-Fuchs/thekenfuchs#readme">README</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span class="who">Entwickelt von Jochen G. Fuchs · <a href="https://efuchs.net">efuchs.net</a></span>
+    <span>MIT-Lizenz</span>
+    <a href="https://github.com/E-Fuchs/thekenfuchs">Quellcode</a>
+    <a href="https://github.com/E-Fuchs/thekenfuchs/blob/main/LIZENZEN.md">Lizenzen</a>
+    <a href="../../">Alle Projekte</a>
+    <a href="https://efuchs.net/impressum/">Impressum</a>
+    <a href="../../datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+</body>
+</html>

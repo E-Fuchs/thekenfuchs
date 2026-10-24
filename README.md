@@ -13,6 +13,26 @@ Produkte mit Preisen auf Tasten · Pfandautomatik · Rückgeld auf einen Blick �
 Offline-Web-App (PWA) für Tablet und Smartphone – iPad, Android, Windows. Kein App Store, kein Server,
 keine Daten über Verkäufe.
 
+## Technik
+
+| | |
+|---|---|
+| Typ | Progressive Web App – installierbar, offline-fähig |
+| Plattformen | iPad/iPhone (Safari), Android (Chrome, Samsung Internet), Windows (Edge, Chrome) |
+| Frontend | HTML, CSS, JavaScript ohne Framework, eine Datei, Schriften eingebettet |
+| Offline | Service Worker (Cache-first, Scope `/thekenfuchs/app/`), Web App Manifest |
+| Speicher | `localStorage` (Preislisten, Geräte-Einstellungen); laufender Gast nur im Arbeitsspeicher |
+| Datenaustausch | QR-Code mit Preisliste im URL-Fragment (`CompressionStream` deflate-raw, base64url), Datei, Web Share |
+| QR-Code | qrcode-generator (erzeugen), jsQR + `getUserMedia` (lesen) |
+| iOS-Installation | Konfigurationsprofil mit Web Clip (`.mobileconfig`) |
+| Weitere APIs | Screen Wake Lock, Web Share, Storage Persistence |
+| Sicherheit | CSP `connect-src 'none'`, keine externen Ressourcen; PIN als Bedienschutz (kein Zugriffsschutz) |
+| Größe | ca. 530 KB, ca. 200 KB komprimiert |
+| Build / Tests | `build.py` (Python), Playwright mit 80 Prüfungen |
+| CI/CD | GitHub Actions → GitHub Pages; Tag/Release → ZIP + Profil |
+
+Architektur und Entscheidungen: https://e-fuchs.github.io/thekenfuchs/technik/
+
 ## Aufbau
 
 | Pfad | Inhalt |
