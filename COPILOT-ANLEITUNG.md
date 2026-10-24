@@ -46,6 +46,10 @@ Teil C ist der Ablauf für Jochen, Teil D die Abnahme.
 
 ## A. Repo `e-fuchs.github.io` – Projektsammelseite
 
+> **Stand 24.10.2026: Dateien fertig** (von Claude erstellt: `index.html`, `datenschutz.html`,
+> `assets/style.css`, `assets/fonts/`, `assets/projects/`, `README.md`). Es fehlt nur das Repo
+> `E-Fuchs/e-fuchs.github.io` und das Hochladen. Teil A dient als Referenz für spätere Änderungen.
+
 ### A.1 Zweck
 
 Eine schlichte Übersicht aller Projekte von Jochen G. Fuchs. Jedes Projekt ist ein
@@ -271,8 +275,10 @@ Oben eine kurze Sprungleiste zu den vier Abschnitten. iPhone wie iPad.
 4. **Copilot Teil B** geben (diese Datei liegt im Repo). PR prüfen, mergen.
 5. **Repo `E-Fuchs/e-fuchs.github.io` anlegen** (öffentlich, Name exakt so), Copilot Teil A geben,
    Pages: Branch `main` / root.
-6. **Version veröffentlichen:** `git tag v1.0.0 && git push origin v1.0.0` → Release mit ZIP
-   und Profil.
+6. **Version veröffentlichen:** Im Repo → Releases → „Draft a new release“ → „Choose a tag“: `v1.0.0`
+   eintippen → „Create new tag“ → Titel „Thekenfuchs 1.0.0“ → „Publish release“. Der Workflow
+   „Release“ baut, testet und hängt `thekenfuchs.zip` und `thekenfuchs.mobileconfig` an (ein paar Minuten).
+   Alternativ per Git: `git tag v1.0.0 && git push origin v1.0.0`.
 7. **Abnahme** nach Teil D, dann Praxistest auf zwei iPads.
 
 ---

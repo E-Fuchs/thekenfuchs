@@ -43,6 +43,11 @@ python test_e2e.py
 
 ## Version veröffentlichen
 
+Im Browser: Releases → „Draft a new release“ → neuen Tag `v1.0.0` anlegen → „Publish release“.
+Der Workflow `Release` hängt danach `thekenfuchs.zip` und `thekenfuchs.mobileconfig` an.
+
+Oder per Git:
+
 ```bash
 git tag v1.0.0 && git push origin v1.0.0
 ```

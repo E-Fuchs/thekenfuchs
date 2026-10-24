@@ -1,20 +1,34 @@
-# Erzeugt bei einem Versions-Tag (z. B. v1.0.0) ein GitHub Release mit
-# thekenfuchs.zip (App zum Download / lokal unter Windows) und thekenfuchs.mobileconfig.
+# Erzeugt bzw. ergänzt ein GitHub Release mit thekenfuchs.zip (App zum Download / lokal unter
+# Windows) und thekenfuchs.mobileconfig.
+# Zwei Wege, beide idempotent:
+#   1. Im Browser: Releases → „Draft a new release“ → Tag v1.0.0 anlegen → „Publish release“
+#   2. Per Git:    git tag v1.0.0 && git push origin v1.0.0
 # Stabiler Download-Link: https://github.com/E-Fuchs/thekenfuchs/releases/latest/download/thekenfuchs.zip
 name: Release
 
 on:
   push:
     tags: ["v*"]
+  release:
+    types: [published]
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.event.release.tag_name || github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -28,15 +42,14 @@ jobs:
           pip install pillow playwright
           python -m playwright install --with-deps chromium
       - name: Bauen
-        run: python build.py --version "${GITHUB_REF_NAME}"
+        run: python build.py --version "$TAG"
       - name: Testen
         run: python test_e2e.py
-      - name: Release anlegen
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Release anlegen oder Dateien anhängen
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            dist/release/thekenfuchs.zip \
-            dist/release/thekenfuchs.mobileconfig \
-            --title "Thekenfuchs ${GITHUB_REF_NAME#v}" \
-            --generate-notes
+          FILES="dist/release/thekenfuchs.zip dist/release/thekenfuchs.mobileconfig"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" $FILES --clobber
+          else
+            gh release create "$TAG" $FILES --title "Thekenfuchs ${TAG#v}" --generate-notes
+          fi
