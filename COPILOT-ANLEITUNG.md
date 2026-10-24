@@ -55,8 +55,7 @@ eigenes Repo mit eigener Pages-Seite unter `/<repo>/`. Die Sammelseite verlinkt 
 
 ```
 index.html          Übersicht mit Projektkarten
-impressum.html      Impressum (Inhalt liefert Jochen – Platzhalter anlegen)
-datenschutz.html    Datenschutzhinweis (Inhalt liefert Jochen – Platzhalter anlegen)
+datenschutz.html    Datenschutzhinweis (Text siehe A.5)
 assets/style.css    Gemeinsames Stylesheet
 assets/fonts/       Barlow / Barlow Condensed (woff2, aus dem Thekenfuchs-Repo kopieren)
 assets/projects/    Vorschaubilder je Projekt (z. B. thekenfuchs.webp)
@@ -83,7 +82,8 @@ Pages-Quelle: **Deploy from a branch → `main` / root**. Kein Build nötig.
     „Quellcode“ → `https://github.com/E-Fuchs/thekenfuchs`
 - Neue Projekte = neue Karte im HTML (bewusst ohne JavaScript, damit die Seite auch ohne
   Skripte und für Suchmaschinen vollständig ist).
-- Fuß: „© 2026 Jochen G. Fuchs · efuchs.net“ · Impressum · Datenschutz.
+- Fuß: „© 2026 Jochen G. Fuchs · efuchs.net“ · Impressum (`https://efuchs.net/impressum/`) ·
+  Datenschutz (`datenschutz.html`). Auf jeder Seite der Sammelseite, auch auf `datenschutz.html`.
 
 ### A.4 Gestaltung
 
@@ -97,10 +97,14 @@ Pages-Quelle: **Deploy from a branch → `main` / root**. Kein Build nötig.
 
 ### A.5 Impressum und Datenschutz
 
-Platzhalter-Seiten anlegen mit Überschrift und dem Satz „Inhalt folgt.“ – **keine** Inhalte
-erfinden. Jochen liefert die Texte. Hinweis für Jochen: Die Seiten werden über GitHub Pages
-ausgeliefert; GitHub verarbeitet dabei Zugriffsdaten (z. B. IP-Adressen). Das gehört in den
-Datenschutzhinweis. Keine Rechtsberatung – Texte bitte selbst prüfen.
+- **Impressum:** kein eigenes. Alle Seiten (Sammelseite und Projekte) verlinken mit der
+  Beschriftung „Impressum“ auf `https://efuchs.net/impressum/`.
+- **Datenschutz:** eigene Seite `datenschutz.html` im Sammelseiten-Repo. Text 1:1 aus
+  `https://github.com/E-Fuchs/thekenfuchs/blob/main/docs/datenschutz-sammelseite.md`
+  übernehmen (Frontmatter und HTML-Kommentar weglassen, Gestaltung wie A.4). Stellen in
+  [eckigen Klammern] als solche stehen lassen und im Pull Request auflisten – nichts erfinden.
+  Diese Seite gilt für alle Projektseiten unter `e-fuchs.github.io`.
+- Keine Rechtsberatung – Jochen prüft beide Texte vor dem Merge.
 
 ---
 
@@ -183,7 +187,8 @@ Stylesheet `site/assets/site.css`, von beiden Seiten genutzt. Kein JavaScript n�
 7. **Fuß:** „Entwickelt von Jochen G. Fuchs · efuchs.net“, „MIT-Lizenz“,
    „Quellcode“ (`https://github.com/E-Fuchs/thekenfuchs`), „Lizenzen“
    (`https://github.com/E-Fuchs/thekenfuchs/blob/main/LIZENZEN.md`),
-   „Alle Projekte“ (`../`), Impressum (`../impressum.html`), Datenschutz (`../datenschutz.html`).
+   „Alle Projekte“ (`../`), Impressum (`https://efuchs.net/impressum/`),
+   Datenschutz (`../datenschutz.html` – liegt auf der Sammelseite).
 
 `<title>Thekenfuchs – Antippen statt Kopfrechnen</title>`, Meta-Description = Untertitel + Leistungszeile,
 Open-Graph-Bild `assets/screen-theke-light.webp`.
@@ -229,7 +234,7 @@ Oben eine kurze Sprungleiste zu den vier Abschnitten. iPhone wie iPad.
 - Kennung „Preisliste XXXX“ oben auf beiden Geräten vergleichen.
 - Optional: PIN für die Einstellungen, Geführter Zugriff (Bedienungshilfen), Auto-Sperre aus.
 
-**Fuß** wie Startseite, Links mit `../`.
+**Fuß** wie Startseite, relative Links mit einem `../` mehr (Datenschutz: `../../datenschutz.html`).
 
 ### B.5 Arbeitsweise
 
@@ -279,6 +284,7 @@ Oben eine kurze Sprungleiste zu den vier Abschnitten. iPhone wie iPad.
 | `/thekenfuchs/demo/` | gelbe Demo-Leiste; nach Neuladen wieder Beispiel-Fest |
 | `/thekenfuchs/app/` | App ohne Demo-Leiste; Einstellungen → Gerät zeigt Profil-Adresse `…/thekenfuchs/app/` |
 | `/thekenfuchs/version.json` | zeigt die Version (Tag) |
+| Impressum- und Datenschutz-Link auf Sammelseite, Start-, Installationsseite, App und Demo | Impressum → efuchs.net/impressum/, Datenschutz → e-fuchs.github.io/datenschutz.html; beide erreichbar |
 | `install/thekenfuchs.mobileconfig` in Safari am iPad | iOS meldet „Profil geladen“. **Falls stattdessen Text angezeigt wird** (falscher Dateityp bei GitHub Pages): Profil per AirDrop oder aus dem Release verteilen und den Hinweis auf der Installationsseite entsprechend anpassen |
 | Release `v1.0.0` | Anhänge `thekenfuchs.zip` und `thekenfuchs.mobileconfig`; Download-Link auf der Startseite funktioniert |
 | iPad, App installiert, Flugmodus | App startet, Preisliste bleibt nach Neustart erhalten |
