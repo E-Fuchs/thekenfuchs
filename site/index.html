@@ -1,16 +1,170 @@
 <!doctype html>
-<!-- PLATZHALTER – wird durch die Startseite ersetzt (siehe COPILOT-ANLEITUNG.md, Abschnitt B). -->
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Thekenfuchs</title>
-<style>body{font-family:system-ui,sans-serif;max-width:40rem;margin:3rem auto;padding:0 16px;line-height:1.5;color:#17201B;background:#EEF1EC}a{color:#0E6A4C;font-weight:600}</style>
-</head><body>
-<h1>Thekenfuchs</h1>
-<p><strong>Antippen statt Kopfrechnen – Thekenrechner für Vereinsfeste.</strong><br>Offline-Web-App für Tablet und Smartphone (iPad, Android, Windows): Produkte mit Preisen auf Tasten, Pfandautomatik, Rückgeld auf einen Blick, Preisliste per QR auf alle Geräte verteilbar.</p>
-<p><em>Rechenhilfe, keine Kasse: Der Thekenfuchs speichert keine Verkäufe.</em></p>
-<ul>
-<li><a href="demo/">Demo ausprobieren</a></li>
-<li><a href="install/thekenfuchs.mobileconfig">Installationsprofil fürs iPad</a> · <a href="app/">App öffnen</a></li>
-<li><a href="https://github.com/E-Fuchs/thekenfuchs/releases/latest/download/thekenfuchs.zip">Download (ZIP)</a></li>
-</ul>
-<p style="font-size:.9rem;color:#59665F">Entwickelt von Jochen G. Fuchs · <a href="https://efuchs.net">efuchs.net</a> · <a href="https://efuchs.net/impressum/">Impressum</a> · <a href="../datenschutz.html">Datenschutz</a></p>
-</body></html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Thekenfuchs – Antippen statt Kopfrechnen</title>
+<meta name="description" content="Antippen statt Kopfrechnen – für Vereinsfeste. Preise auf Tasten · Pfand rechnet mit · Rückgeld auf einen Blick · eine Preisliste für alle Geräte.">
+<meta name="author" content="Jochen G. Fuchs, efuchs.net">
+<meta name="theme-color" content="#0E6A4C" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101513" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Thekenfuchs – Antippen statt Kopfrechnen">
+<meta property="og:description" content="Thekenrechner für Vereinsfeste. Offline-Web-App für iPad, Android und Windows. Rechenhilfe, keine Kasse – speichert keine Verkäufe.">
+<meta property="og:url" content="https://e-fuchs.github.io/thekenfuchs/">
+<meta property="og:image" content="https://e-fuchs.github.io/thekenfuchs/assets/screen-theke-light.webp">
+<meta property="og:locale" content="de_DE">
+<link rel="icon" href="app/icon-192.png">
+<link rel="apple-touch-icon" href="app/icon-180.png">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#inhalt">Zum Inhalt</a>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="assets/icon-512.png" alt="" width="32" height="32">Thekenfuchs</a>
+    <nav aria-label="Seiten">
+      <a href="demo/">Demo</a>
+      <a href="install/">Installieren</a>
+      <a class="nav-all" href="../">Alle Projekte</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inhalt">
+
+  <section class="hero" aria-labelledby="titel">
+    <div class="wrap">
+      <div class="hero-text">
+        <img class="hero-icon" src="assets/icon-512.png" alt="" width="96" height="96">
+        <h1 id="titel">Thekenfuchs</h1>
+        <p class="tagline">Antippen statt Kopfrechnen – für Vereinsfeste</p>
+        <p class="features-line"><span>Preise auf Tasten</span> · <span>Pfand rechnet mit</span> · <span>Rückgeld auf einen Blick</span> · <span>eine Preisliste für alle Geräte</span></p>
+        <div class="btns">
+          <a class="btn btn-primary" href="demo/">Demo ausprobieren</a>
+          <a class="btn" href="install/">Installieren</a>
+          <a class="btn" href="https://github.com/E-Fuchs/thekenfuchs/releases/latest/download/thekenfuchs.zip">Download <small>ZIP</small></a>
+        </div>
+        <p class="disclaimer">Rechenhilfe, keine Kasse: Der Thekenfuchs speichert keine Verkäufe.</p>
+      </div>
+      <div class="device">
+        <picture>
+          <source srcset="assets/screen-theke-dark.webp" media="(prefers-color-scheme: dark)">
+          <img src="assets/screen-theke-light.webp" width="2360" height="1640"
+               alt="Thekenfuchs auf dem iPad: Marken für Speisen, Getränke und Pfand, rechts die Liste des Gastes mit Summe 27,00 €, gegeben 30,00 €, Rückgeld 3,00 €.">
+        </picture>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="besser">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Tablet und Smartphone – iPad, Android, Windows</p>
+        <h2 id="besser">Was er besser kann als ein Taschenrechner</h2>
+      </div>
+
+      <div class="tickets three">
+        <article class="ticket c-speisen">
+          <h3>Preise auf Tasten</h3>
+          <p>Bratwurst antippen statt 3,50 eintippen. Zweimal antippen = zwei Stück.</p>
+        </article>
+        <article class="ticket c-getraenke">
+          <h3>Rückgeld auf einen Blick</h3>
+          <p>Geldtasten von 50 ct bis 100 €, mit „+“ und „−“ für mehrere Scheine. Auf Wunsch addiert jeder Tipp automatisch.</p>
+        </article>
+        <article class="ticket c-gelb">
+          <h3>Mehrere Feste</h3>
+          <p>Sommerfest, Weinfest, Weihnachtsmarkt: je eigene Preisliste, schnell gewechselt. Einstellungen auf Wunsch mit PIN geschützt.</p>
+        </article>
+      </div>
+
+      <div class="feature c-pfand">
+        <div class="feature-text">
+          <h3>Pfand rechnet mit</h3>
+          <p>Getränke bringen ihr Pfand automatisch mit in die Summe. Glas, Krug, Rückgabe – alles in einer Pfandkategorie, mit Standard-Pfandwert.</p>
+        </div>
+        <img class="shot" src="assets/screen-pfand.webp" width="1628" height="780" loading="lazy"
+             alt="Pfandkategorie in den Einstellungen: Pfand Glas 2,00 € als Standard, Pfand zurück −2,00 €, Pfand Krug 5,00 €, Pfand automatisch hinzufügen ist eingeschaltet.">
+      </div>
+
+      <div class="feature flip c-gruen">
+        <div class="feature-text">
+          <h3>Eine Preisliste für alle Geräte</h3>
+          <p>Preise einmal pflegen, per QR-Code auf die anderen Tablets übertragen. Eine Kennung zeigt, ob alle Geräte gleich rechnen.</p>
+        </div>
+        <img class="shot" src="assets/screen-qr.webp" width="1628" height="602" loading="lazy"
+             alt="Weitergabe der Preisliste: QR-Code, daneben Kennung der Preisliste, Anzahl der Artikel und Schaltflächen zum Kopieren und Teilen.">
+      </div>
+
+      <div class="tickets two">
+        <article class="ticket c-gruen">
+          <h3>Läuft ohne Internet</h3>
+          <p>Einmal installiert, funktioniert er auch im Festzelt ohne Netz.</p>
+        </article>
+        <article class="ticket c-getraenke">
+          <h3>Auf jedem Gerät</h3>
+          <p>iPad, Android-Tablet, Windows-Tablet oder Smartphone. Kein App Store, keine Anmeldung.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="nicht">
+    <div class="wrap">
+      <div class="nope">
+        <h2 id="nicht">Was er bewusst nicht kann</h2>
+        <ul>
+          <li>Keine Kasse und kein Bon: Er speichert keine Verkäufe, keine Summen, keine Tagesabschlüsse.</li>
+          <li>Keine Daten verlassen das Gerät. Gespeichert sind nur die Preislisten.</li>
+          <li>Kassiert wird wie gewohnt bar in die Kassette.</li>
+        </ul>
+        <p class="note">Keine Steuerberatung – den Einsatz bitte mit dem Steuerberater des Vereins abstimmen.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="telefon">
+    <div class="wrap phone">
+      <div class="section-head">
+        <p class="eyebrow">Am Telefon</p>
+        <h2 id="telefon">Auch für den Getränkestand</h2>
+        <p class="lead">Läuft auch auf dem Smartphone – iPhone oder Android – für den Getränkestand ohne Tablet.</p>
+      </div>
+      <div class="phone-shot">
+        <img src="assets/screen-phone.webp" width="1170" height="2532" loading="lazy"
+             alt="Thekenfuchs auf dem Smartphone: oben die Marken, unten Liste, Summe, Geldtasten und Rückgeld.">
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="aufsgeraet">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="aufsgeraet">So kommt er aufs Gerät</h2>
+      </div>
+      <ol class="steps">
+        <li><strong>Installieren</strong><span>Auf dem iPad per Installationsprofil oder „Zum Home-Bildschirm“, auf Android und Windows über den Browser.</span></li>
+        <li><strong>Einmal mit Internet starten</strong><span>Danach läuft er offline.</span></li>
+        <li><strong>Preisliste per QR übernehmen</strong><span>In der App den QR-Code vom ersten Gerät scannen.</span></li>
+      </ol>
+      <p class="more"><a href="install/">Ausführliche Anleitung</a></p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span class="who">Entwickelt von Jochen G. Fuchs · <a href="https://efuchs.net">efuchs.net</a></span>
+    <span>MIT-Lizenz</span>
+    <a href="https://github.com/E-Fuchs/thekenfuchs">Quellcode</a>
+    <a href="https://github.com/E-Fuchs/thekenfuchs/blob/main/LIZENZEN.md">Lizenzen</a>
+    <a href="../">Alle Projekte</a>
+    <a href="https://efuchs.net/impressum/">Impressum</a>
+    <a href="../datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+</body>
+</html>

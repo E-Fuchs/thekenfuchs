@@ -110,6 +110,9 @@ Pages-Quelle: **Deploy from a branch → `main` / root**. Kein Build nötig.
 
 ## B. Repo `thekenfuchs` – Start- und Installationsseite
 
+> **Stand 24.10.2026: umgesetzt** (`site/index.html`, `site/install/index.html`, `site/assets/site.css`).
+> Teil B dient nur noch als Referenz für spätere Änderungen. Für Copilot offen ist **Teil A**.
+
 ### B.1 Was schon da ist (nicht ändern)
 
 | Pfad | Inhalt |
@@ -160,11 +163,11 @@ Stylesheet `site/assets/site.css`, von beiden Seiten genutzt. Kein JavaScript n�
    (`install/`), **Download** (Release-Link). Darunter klein die Abgrenzung.
 2. **Bild:** `assets/screen-theke-light.webp` mit `<picture>` und
    `assets/screen-theke-dark.webp` für `prefers-color-scheme: dark`.
-   Alt-Text: „Thekenfuchs auf dem iPad: Marken für Speisen, Getränke und Pfand, rechts der
-   Bon mit Summe 27,00 €, gegeben 30,00 €, Rückgeld 3,00 €.“
+   Alt-Text: „Thekenfuchs auf dem iPad: Marken für Speisen, Getränke und Pfand, rechts die
+   Liste des Gastes mit Summe 27,00 €, gegeben 30,00 €, Rückgeld 3,00 €.“
 3. **Was er besser kann als ein Taschenrechner** (Raster, je Punkt Überschrift + 1–2 Sätze):
    - **Preise auf Tasten** – Bratwurst antippen statt 3,50 eintippen. Zweimal antippen = zwei Stück.
-   - **Pfand rechnet mit** – Getränke bringen ihr Pfand automatisch mit auf den Bon. Glas, Krug,
+   - **Pfand rechnet mit** – Getränke bringen ihr Pfand automatisch mit in die Summe. Glas, Krug,
      Rückgabe – alles in einer Pfandkategorie, mit Standard-Pfandwert. Bild `assets/screen-pfand.webp`.
    - **Rückgeld auf einen Blick** – Geldtasten von 50 ct bis 100 €, mit „+“ und „−“ für mehrere
      Scheine. Auf Wunsch addiert jeder Tipp automatisch.

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Thekenfuchs installieren</title>
+<meta name="description" content="Thekenfuchs auf iPad, iPhone, Android und Windows installieren – mit Installationsprofil oder über den Browser. Danach läuft er offline.">
+<meta name="author" content="Jochen G. Fuchs, efuchs.net">
+<meta name="theme-color" content="#0E6A4C" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101513" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="../app/icon-192.png">
+<link rel="apple-touch-icon" href="../app/icon-180.png">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<a class="skip" href="#inhalt">Zum Inhalt</a>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="../"><img src="../assets/icon-512.png" alt="" width="32" height="32">Thekenfuchs</a>
+    <nav aria-label="Seiten">
+      <a href="../demo/">Demo</a>
+      <a href="./" aria-current="page">Installieren</a>
+      <a class="nav-all" href="../../">Alle Projekte</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inhalt">
+  <div class="page-head">
+    <div class="wrap">
+      <h1>Thekenfuchs installieren</h1>
+      <p class="lead">Einmal mit Internet einrichten, danach läuft er ohne Netz. iPhone wie iPad.</p>
+      <nav class="jump" aria-label="Abschnitte">
+        <a href="#ipad">iPad und iPhone</a>
+        <a href="#android">Android</a>
+        <a href="#windows">Windows</a>
+        <a href="#danach">Nach der Installation</a>
+      </nav>
+    </div>
+  </div>
+
+  <section class="howto" id="ipad" aria-labelledby="h-ipad" style="--c:var(--c-speisen)">
+    <div class="wrap">
+      <aside>
+        <h2 id="h-ipad">iPad und iPhone</h2>
+        <p>Für mehrere Vereins-iPads ist das Installationsprofil am bequemsten: gleiches Symbol auf jedem Gerät, Vollbild, auf Wunsch gegen versehentliches Löschen geschützt.</p>
+      </aside>
+      <div class="howto-body">
+        <div class="card recommended">
+          <span class="tag">Empfohlen</span>
+          <h3>Mit Installationsprofil</h3>
+          <ol class="do">
+            <li>
+              <p>Profil in Safari laden:</p>
+              <p class="btns" style="margin-top:8px"><a class="btn btn-primary" href="thekenfuchs.mobileconfig">Installationsprofil laden</a></p>
+              <p style="margin-top:8px">Alternativ die Datei per AirDrop schicken oder in der installierten App unter <span class="path">Einstellungen → Gerät → „Installationsprofil teilen“</span>.</p>
+            </li>
+            <li><span class="path">Einstellungen → „Profil geladen“ → Installieren.</span>
+              <p class="callout" style="margin-top:8px">iOS zeigt „Nicht verifiziert“, weil das Profil nicht signiert ist. Das ist normal.</p></li>
+            <li>Thekenfuchs vom Home-Bildschirm <strong>einmal mit Internet</strong> starten. Danach läuft er offline.</li>
+            <li>Entfernen: <span class="path">Einstellungen → Allgemein → VPN und Geräteverwaltung → Thekenfuchs</span>.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Von Hand</h3>
+          <ol class="do">
+            <li><a href="../app/">Thekenfuchs in Safari öffnen</a>.</li>
+            <li><span class="path">Teilen → „Zum Home-Bildschirm“</span>.</li>
+            <li>Vom Home-Bildschirm einmal mit Internet starten.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="howto" id="android" aria-labelledby="h-android" style="--c:var(--c-gruen)">
+    <div class="wrap">
+      <aside>
+        <h2 id="h-android">Android</h2>
+        <p>Tablet und Smartphone. Am besten mit Chrome – oft bietet Chrome die Installation von selbst an.</p>
+      </aside>
+      <div class="howto-body">
+        <div class="card">
+          <ol class="do">
+            <li><a href="../app/">Thekenfuchs in Chrome öffnen</a>.</li>
+            <li><span class="path">Menü (⋮) → „App installieren“</span> bzw. <span class="path">„Zum Startbildschirm hinzufügen“ → „Installieren“</span>. Oft erscheint der Vorschlag auch unten im Bild.</li>
+            <li>Vom Startbildschirm einmal mit Internet starten. Danach läuft er offline.</li>
+          </ol>
+          <ul class="plain">
+            <li>Samsung Internet kann ebenfalls installieren: <span class="path">Menü → „Seite hinzufügen zu“ → „Startbildschirm“</span>.</li>
+            <li>Das Installationsprofil (<code>.mobileconfig</code>) ist nur für iPad und iPhone und wird auf Android nicht gebraucht.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="howto" id="windows" aria-labelledby="h-windows" style="--c:var(--c-getraenke)">
+    <div class="wrap">
+      <aside>
+        <h2 id="h-windows">Windows-Tablet</h2>
+        <p>Mit Edge oder Chrome. Firefox kann keine Web-Apps installieren.</p>
+      </aside>
+      <div class="howto-body">
+        <div class="card recommended">
+          <span class="tag">Empfohlen</span>
+          <h3>Online installieren</h3>
+          <ol class="do">
+            <li><a href="../app/">Thekenfuchs in Edge oder Chrome öffnen</a>.</li>
+            <li>Als App installieren – Edge: <span class="path">Menü → Apps</span>; Chrome: Installieren-Symbol in der Adressleiste.</li>
+          </ol>
+        </div>
+        <div class="card">
+          <h3>Ohne Internet</h3>
+          <ol class="do">
+            <li><a href="https://github.com/E-Fuchs/thekenfuchs/releases/latest/download/thekenfuchs.zip">Download-ZIP</a> entpacken und den Ordner an einen festen Ort legen.</li>
+            <li><code>index.html</code> in Edge oder Chrome öffnen.</li>
+            <li>Preislisten per „Code einfügen“ übernehmen – in dieser Variante gibt es keinen Kamera-Scan.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="howto" id="danach" aria-labelledby="h-danach" style="--c:var(--c-gelb)">
+    <div class="wrap">
+      <aside>
+        <h2 id="h-danach">Nach der Installation</h2>
+        <p>Auf jedem Gerät einmal die Preisliste übernehmen und prüfen.</p>
+      </aside>
+      <div class="howto-body">
+        <div class="card">
+          <ul class="plain">
+            <li><strong>Preisliste übernehmen:</strong> In der installierten App <span class="path">Einstellungen → „QR scannen“</span> und den QR-Code am ersten Gerät scannen.</li>
+            <li><strong>Kennung vergleichen:</strong> „Preisliste XXXX“ oben muss auf allen Geräten gleich sein.</li>
+            <li><strong>Optional:</strong> PIN für die Einstellungen, Geführter Zugriff (Bedienungshilfen), Auto-Sperre aus.</li>
+          </ul>
+          <p class="callout warn"><strong>Immer in der App scannen</strong>, nicht mit der Kamera-App oder Google Lens. Die öffnen den Browser, und der hat einen getrennten Speicher – vor allem auf iPad und iPhone.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span class="who">Entwickelt von Jochen G. Fuchs · <a href="https://efuchs.net">efuchs.net</a></span>
+    <span>MIT-Lizenz</span>
+    <a href="https://github.com/E-Fuchs/thekenfuchs">Quellcode</a>
+    <a href="https://github.com/E-Fuchs/thekenfuchs/blob/main/LIZENZEN.md">Lizenzen</a>
+    <a href="../../">Alle Projekte</a>
+    <a href="https://efuchs.net/impressum/">Impressum</a>
+    <a href="../../datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+</body>
+</html>
